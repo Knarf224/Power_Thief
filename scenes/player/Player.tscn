@@ -1,0 +1,26 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://scripts/player/player.gd" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/player/Projectile.tscn" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/player/FireBomb.tscn" id="3"]
+[ext_resource type="PackedScene" path="res://scenes/player/DashExplosion.tscn" id="4"]
+[ext_resource type="PackedScene" path="res://scenes/player/SummonedAlly.tscn" id="5"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_1"]
+radius = 16.0
+
+[node name="Player" type="CharacterBody2D"]
+script = ExtResource("1")
+projectile_scene = ExtResource("2")
+fire_bomb_scene = ExtResource("3")
+dash_explosion_scene = ExtResource("4")
+summon_ally_scene = ExtResource("5")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_1")
+
+[node name="Visual" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(-14, -18, 14, -18, 14, 18, -14, 18)
+color = Color(0.2, 0.6, 1, 1)
+
+[node name="Camera2D" type="Camera2D" parent="."]

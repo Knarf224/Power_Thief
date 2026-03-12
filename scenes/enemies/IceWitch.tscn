@@ -1,0 +1,18 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/ice_witch.gd" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/enemies/IceProjectile.tscn" id="2"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
+size = Vector2(18, 24)
+
+[node name="IceWitch" type="CharacterBody2D"]
+script = ExtResource("1")
+projectile_scene = ExtResource("2")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_1")
+
+[node name="Visual" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(-9, -12, 9, -12, 9, 12, -9, 12)
+color = Color(0.1, 0.75, 0.9, 1)

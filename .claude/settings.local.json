@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cd \"D:\\\\Coding_W_Knarf\\\\Coding\\\\GameJam\\\\Power_Thief\\\\new-game-project\" && sed -i 's/ \\\\*\\(Planned\\)\\\\*//g' enemies.md)"
+    ]
+  }
+}

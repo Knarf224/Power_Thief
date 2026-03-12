@@ -1,0 +1,10 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/player/dash_explosion.gd" id="1"]
+
+[node name="DashExplosion" type="Node2D"]
+script = ExtResource("1")
+
+[node name="Visual" type="Polygon2D" parent="."]
+polygon = PackedVector2Array(0, -80, 24, -24, 80, 0, 24, 24, 0, 80, -24, 24, -80, 0, -24, -24)
+color = Color(0.6, 0.35, 0.05, 0.7)
