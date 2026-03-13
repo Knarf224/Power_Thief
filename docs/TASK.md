@@ -43,7 +43,7 @@
 ---
 
 ## 3. Enemies (10 types)
-- [x] Base enemy class (`base_enemy.gd`) — health, AI loop, death, core drop, slow effect, poison DoT
+- [x] Base enemy class (`base_enemy.gd`) — health, AI loop, death, core drop, slow effect, poison DoT, stuck-detection teleport system (`teleport_when_stuck`, `teleport_target`, `teleport_zones`)
 - [x] **Fire Mage** — ranged, maintains 160px distance, shoots every 1s, drops Fire Core (red projectile)
 - [x] **Rogue Assassin** — chases, dashes at player within 120px, contact damage, drops Dash Core
 - [x] **Slime** — slow chase, contact damage, splits into 2 minis on death, Split Core drops from last mini
@@ -60,14 +60,23 @@
 
 ---
 
-## 4. Dungeon (5 rooms)
-- [x] Single room with walls, floor, enemy spawning
-- [x] Room state machine (FIGHTING → CORES_ACTIVE → TRANSITION_READY)
-- [x] Walls removed when room is cleared and core is picked
+## 4. Dungeon
+- [x] Standard Combat Room — open layout, 2 enemies, room state machine (FIGHTING → CORES_ACTIVE → TRANSITION_READY)
+- [x] Walls removed when room is cleared and core is picked up
 - [x] "Walk in any direction" prompt shown to player
 - [x] Player walks off screen → enters new room from opposite edge with fresh enemies
-- [ ] 5 distinct hand-placed rooms (currently reuses same room layout)
-- [ ] Room types: 3x Combat, 1x Treasure (free core), 1x Boss
+- [x] `GameState` autoload — persists health, cores, exit direction, room counter across scene changes
+- [x] Deterministic room rotation — Ambush Room always appears as 2nd room, then every 3rd after
+- [x] **Ambush Room** — 1920x1080 cross-corridor layout with 4 enclosed corner rooms
+  - [x] Trigger zones per corner + center trigger (crossing center spawns all rooms at once)
+  - [x] 0.3s arm delay prevents immediate trigger on scene load
+  - [x] Ghost / Assassin / BombBeetle weighted 3x in enemy pool
+  - [x] 3 enemies per triggered room (max 12 total)
+  - [x] Corner teleport zones — enemies stuck in inner corners for 1s teleport to room center (960, 540)
+  - [x] Teleport zones marked with dark red-purple floor tiles
+  - [x] Core pickup race condition fixed — one-frame delay before checking for empty core group
+- [ ] Additional room types (Gauntlet, Elite, Siege, Maze)
+- [ ] Boss room
 
 ---
 
@@ -84,8 +93,8 @@
 - [x] Health bar — top left, green fill over red background, shrinks as damage is taken
 - [x] Core slot display — bottom left, 3 star-shaped slots that light up with core color when equipped
 - [x] Key indicators — 1 / 2 / 3 shown inside each slot box so player knows how to activate cores
+- [x] **YOU DIED screen** — dark overlay + large red "YOU DIED" text + "Press R to restart" prompt; R key fully resets GameState and returns to room 1
 - [ ] Core pickup prompt ("Press E to take / swap")
-- [ ] Game Over screen (with restart)
 - [ ] Win screen
 
 ---
@@ -107,9 +116,8 @@
 ---
 
 ## Remaining MVP Items
-- [ ] Multi-room dungeon (5 distinct rooms)
+- [ ] Additional room types (Gauntlet, Elite, Siege, or Maze)
 - [ ] Boss fight
-- [ ] Game Over screen
 - [ ] Win screen
 - [ ] Core pickup prompt UI
 
@@ -138,20 +146,21 @@ new-game-project/
 │   │                 # IceProjectile.tscn, LightningProjectile.tscn,
 │   │                 # NecromancerProjectile.tscn, PoisonToadProjectile.tscn
 │   ├── core_system/  # CorePickup.tscn
-│   ├── rooms/        # (empty — next milestone)
+│   ├── dungeon/      # AmbushRoom.tscn
 │   ├── ui/           # HUD.tscn
 │   └── boss/         # (empty — next milestone)
 ├── scripts/
+│   ├── autoload/     # game_state.gd  ← persists player state across scene changes
 │   ├── player/       # player.gd, projectile.gd, fire_bomb.gd, dash_explosion.gd, summoned_ally.gd
 │   ├── enemies/      # base_enemy.gd, fire_mage.gd, assassin.gd, slime.gd, ghost.gd,
 │   │                 # bomb_beetle.gd, ice_witch.gd, lightning_sprite.gd, stone_golem.gd,
 │   │                 # necromancer.gd, summoned_spirit.gd, poison_toad.gd, enemy_projectile.gd
 │   ├── core_system/  # core_pickup.gd
-│   ├── dungeon/      # main.gd
+│   ├── dungeon/      # main.gd (Standard Combat Room), ambush_room.gd (Ambush Room)
 │   └── ui/           # hud.gd
 ├── resources/
 │   └── power_cores/  # (placeholder)
 └── assets/
-    ├── sprites/      # (placeholder)
+    ├── enemies/      # fire_mage.png, frost_mage.png  ← 16x16 Aseprite pixel art sprites
     └── audio/        # (placeholder)
 ```

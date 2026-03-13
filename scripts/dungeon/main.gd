@@ -39,6 +39,15 @@ func _ready() -> void:
 	player.health_changed.connect(hud.update_health)
 	player.cores_changed.connect(hud.update_cores)
 	player.died.connect(_on_player_died)
+	hud.update_health(player.health, player.MAX_HEALTH)
+	hud.update_cores(player.core_slots)
+	# Position player on the opposite side from where they exited last room
+	match GameState.exit_direction:
+		"west":  player.position = Vector2(ROOM_W - 80, ROOM_H / 2.0)
+		"east":  player.position = Vector2(80,          ROOM_H / 2.0)
+		"north": player.position = Vector2(ROOM_W / 2.0, ROOM_H - 80)
+		"south": player.position = Vector2(ROOM_W / 2.0, 80)
+		_:       player.position = Vector2(ROOM_W / 2.0, ROOM_H / 2.0)
 
 func _process(_delta: float) -> void:
 	match _state:
@@ -54,9 +63,14 @@ func _process(_delta: float) -> void:
 
 		RoomState.TRANSITION_READY:
 			var pos: Vector2 = player.global_position
-			var exited := pos.x < -EXIT_THRESHOLD or pos.x > ROOM_W + EXIT_THRESHOLD or pos.y < -EXIT_THRESHOLD or pos.y > ROOM_H + EXIT_THRESHOLD
-			if exited:
-				_load_next_room()
+			if pos.x < -EXIT_THRESHOLD:
+				_load_next_room("west")
+			elif pos.x > ROOM_W + EXIT_THRESHOLD:
+				_load_next_room("east")
+			elif pos.y < -EXIT_THRESHOLD:
+				_load_next_room("north")
+			elif pos.y > ROOM_H + EXIT_THRESHOLD:
+				_load_next_room("south")
 
 func _spawn_enemies() -> void:
 	var types = ENEMY_SCENES.duplicate()
@@ -77,28 +91,14 @@ func _open_exits() -> void:
 	_walls.clear()
 	hud.show_transition_prompt()
 
-func _load_next_room() -> void:
-	hud.hide_transition_prompt()
-	_state = RoomState.FIGHTING
-	_enemies_spawned = false
-
-	# Reposition player to opposite side of the exit they used
-	var pos := player.global_position
-	if pos.x < 0:
-		player.global_position = Vector2(ROOM_W - 80, ROOM_H / 2.0)
-	elif pos.x > ROOM_W:
-		player.global_position = Vector2(80, ROOM_H / 2.0)
-	elif pos.y < 0:
-		player.global_position = Vector2(ROOM_W / 2.0, ROOM_H - 80)
-	else:
-		player.global_position = Vector2(ROOM_W / 2.0, 80)
-
-	_create_walls()
-	_spawn_enemies()
+func _load_next_room(direction: String) -> void:
+	GameState.player_health = player.health
+	GameState.player_cores = player.core_slots.duplicate()
+	GameState.exit_direction = direction
+	get_tree().change_scene_to_file(GameState.next_room_scene())
 
 func _on_player_died() -> void:
-	print("Game Over")
-	# TODO: show game over screen
+	hud.show_you_died()
 
 func _create_floor() -> void:
 	var floor_vis = Polygon2D.new()

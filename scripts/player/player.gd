@@ -43,6 +43,8 @@ signal cores_changed(slots: Array)
 
 func _ready() -> void:
 	add_to_group("player")
+	health = GameState.player_health
+	core_slots = GameState.player_cores.duplicate()
 
 func _physics_process(delta: float) -> void:
 	if is_dashing:

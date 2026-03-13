@@ -101,3 +101,31 @@ offset_bottom = 560.0
 theme_override_font_sizes/font_size = 22
 horizontal_alignment = 1
 text = "Room cleared — walk in any direction"
+
+[node name="YouDiedOverlay" type="ColorRect" parent="."]
+visible = false
+offset_right = 1920.0
+offset_bottom = 1080.0
+color = Color(0.0, 0.0, 0.0, 0.75)
+
+[node name="YouDiedTitle" type="Label" parent="."]
+visible = false
+offset_left = 0.0
+offset_top = 380.0
+offset_right = 1920.0
+offset_bottom = 520.0
+theme_override_font_sizes/font_size = 120
+theme_override_colors/font_color = Color(0.75, 0.05, 0.05, 1)
+horizontal_alignment = 1
+text = "YOU DIED"
+
+[node name="YouDiedPrompt" type="Label" parent="."]
+visible = false
+offset_left = 0.0
+offset_top = 550.0
+offset_right = 1920.0
+offset_bottom = 610.0
+theme_override_font_sizes/font_size = 32
+theme_override_colors/font_color = Color(0.75, 0.75, 0.75, 1)
+horizontal_alignment = 1
+text = "Press R to restart"

@@ -1,7 +1,8 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=5 format=3 uid="uid://dv3yll58xmg3w"]
 
 [ext_resource type="Script" path="res://scripts/enemies/fire_mage.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/FireMageProjectile.tscn" id="2"]
+[ext_resource type="Texture2D" uid="uid://cbdgj2bpcbr2v" path="res://assets/enemies/fire_mage.png" id="3"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
 size = Vector2(20, 24)
@@ -13,6 +14,7 @@ projectile_scene = ExtResource("2")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_1")
 
-[node name="Visual" type="Polygon2D" parent="."]
-polygon = PackedVector2Array(-10, -12, 10, -12, 10, 12, -10, 12)
-color = Color(0.9, 0.2, 0.1, 1)
+[node name="Visual" type="Sprite2D" parent="."]
+texture_filter = 1
+scale = Vector2(4, 4)
+texture = ExtResource("3")

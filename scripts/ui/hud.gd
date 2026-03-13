@@ -21,6 +21,11 @@ const CORE_COLORS = {
 @onready var slot_star_2: Polygon2D = $SlotStar2
 @onready var slot_star_3: Polygon2D = $SlotStar3
 @onready var transition_prompt: Label = $TransitionPrompt
+@onready var you_died_overlay: ColorRect = $YouDiedOverlay
+@onready var you_died_title: Label = $YouDiedTitle
+@onready var you_died_prompt: Label = $YouDiedPrompt
+
+var _player_dead := false
 
 func update_health(current: int, maximum: int) -> void:
 	fill.size.x = BAR_MAX_WIDTH * (float(current) / float(maximum))
@@ -35,3 +40,19 @@ func show_transition_prompt() -> void:
 
 func hide_transition_prompt() -> void:
 	transition_prompt.visible = false
+
+func show_you_died() -> void:
+	_player_dead = true
+	you_died_overlay.visible = true
+	you_died_title.visible = true
+	you_died_prompt.visible = true
+
+func _unhandled_input(event: InputEvent) -> void:
+	if not _player_dead:
+		return
+	if event is InputEventKey and event.pressed and event.keycode == KEY_R:
+		GameState.player_health = 100
+		GameState.player_cores = [0, 0, 0]
+		GameState.exit_direction = ""
+		GameState.room_counter = 0
+		get_tree().change_scene_to_file("res://scenes/Main.tscn")
