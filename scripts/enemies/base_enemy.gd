@@ -100,11 +100,11 @@ func _on_death() -> void:
 func _spawn_death_burst() -> void:
 	const BURST_RADIUS := 60.0
 	const BURST_DAMAGE := 20
-	for enemy in get_tree().get_nodes_in_group("enemy"):
+	for enemy: Node2D in get_tree().get_nodes_in_group("enemy"):
 		if enemy == self or not is_instance_valid(enemy):
 			continue
 		if global_position.distance_to(enemy.global_position) <= BURST_RADIUS:
-			enemy.take_damage(BURST_DAMAGE)
+			enemy.call("take_damage", BURST_DAMAGE)
 
 func _spawn_core_pickup() -> void:
 	var pickup = load("res://scenes/core_system/CorePickup.tscn").instantiate()
