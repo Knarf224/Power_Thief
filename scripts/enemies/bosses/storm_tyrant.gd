@@ -25,7 +25,7 @@ var _orbit_angle  := 0.0
 
 func _ready() -> void:
 	boss_name       = "The Storm Tyrant"
-	boss_perk_pool  = ["rapid_fire", "gravity_push", "death_burst"]
+	boss_perk_pool  = ["rapid_fire", "gravity_push", "death_burst", "overclock"]
 	companion_scene = "res://scenes/enemies/LightningSprite.tscn"
 	super()
 	max_health = 280
@@ -43,7 +43,7 @@ func _ai_update(delta: float) -> void:
 	if _aura_tick <= 0.0:
 		_aura_tick = AURA_TICK
 		if _dist_to_player() <= _aura_radius():
-			player.take_damage(AURA_DAMAGE)
+			player.take_damage(AURA_DAMAGE, self)
 
 	# Homing bolts
 	_shoot_timer -= delta

@@ -26,7 +26,7 @@ var _shield_left     := SHIELD_HITS
 
 func _ready() -> void:
 	boss_name       = "The Warden"
-	boss_perk_pool  = ["stopping_power", "gravity_push", "thorns"]
+	boss_perk_pool  = ["stopping_power", "gravity_push", "thorns", "berserker"]
 	companion_scene = "res://scenes/enemies/StoneGolem.tscn"
 	super()
 	max_health = 350
@@ -62,7 +62,7 @@ func _ai_update(delta: float) -> void:
 			velocity = _charge_dir * _charge_speed()
 			# Heavy impact if we run into the player while charging
 			if _dist_to_player() < 48.0 and _contact_cd <= 0.0:
-				player.take_damage(40)
+				player.take_damage(40, self)
 				_contact_cd = CONTACT_COOLDOWN
 
 		State.STUNNED:
@@ -75,7 +75,7 @@ func _ai_update(delta: float) -> void:
 func _try_contact_damage() -> void:
 	if _contact_cd > 0.0 or _dist_to_player() > 48.0:
 		return
-	player.take_damage(CONTACT_DAMAGE)
+	player.take_damage(CONTACT_DAMAGE, self)
 	_contact_cd = CONTACT_COOLDOWN
 
 func take_damage(amount: int) -> void:

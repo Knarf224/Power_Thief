@@ -2,11 +2,13 @@ extends Area2D
 
 const SPEED = 500.0
 const LIFETIME = 2.0
-const DAMAGE = 10
+const BASE_DAMAGE = 10
 
 var direction := Vector2.RIGHT
 var _timer := 0.0
+var damage := BASE_DAMAGE
 
+var piercing := false
 var apply_slow := false
 var apply_poison := false
 var chain_count := 0
@@ -26,14 +28,17 @@ func _on_body_entered(body: Node2D) -> void:
 	if body.is_in_group("player"):
 		return
 	if body.has_method("take_damage"):
-		body.take_damage(DAMAGE)
+		body.take_damage(damage)
 		if apply_slow and body.has_method("apply_slow"):
 			body.apply_slow(0.4, 2.0)
 		if apply_poison and body.has_method("apply_poison"):
 			body.apply_poison(5, 3.0)
 		if chain_count > 0:
 			_do_chain(body)
-	queue_free()
+		if not piercing:
+			queue_free()
+	else:
+		queue_free()  # wall hit
 
 func _do_chain(hit_body: Node) -> void:
 	var hits := 0

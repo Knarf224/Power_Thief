@@ -23,7 +23,7 @@ func _ai_update(delta: float) -> void:
 		if _shield_recharge_timer <= 0.0:
 			_has_shield = true
 	if _dist_to_player() < 28.0 and _contact_cooldown <= 0.0:
-		player.take_damage(CONTACT_DAMAGE)
+		player.take_damage(CONTACT_DAMAGE, self)
 		_contact_cooldown = CONTACT_COOLDOWN
 
 func take_damage(amount: int) -> void:

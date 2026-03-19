@@ -48,5 +48,5 @@ func _start_dash() -> void:
 func _try_contact_damage() -> void:
 	if _contact_cooldown > 0.0 or _dist_to_player() > 30.0:
 		return
-	player.take_damage(CONTACT_DAMAGE)
+	player.take_damage(CONTACT_DAMAGE, self)
 	_contact_cooldown = CONTACT_COOLDOWN

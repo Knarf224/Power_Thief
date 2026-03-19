@@ -11,6 +11,9 @@ const PERK_NAMES: Dictionary = {
 	"rapid_fire":     "Rapid Fire",
 	"thorns":         "Thorns",
 	"death_burst":    "Death Burst",
+	"berserker":      "Berserker",
+	"iron_will":      "Iron Will",
+	"overclock":      "Overclock",
 }
 
 # Set by GameState before add_child — always strings, never Variant

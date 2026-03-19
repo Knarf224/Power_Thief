@@ -134,9 +134,30 @@ func is_boss_level() -> bool:
 	# room_counter + 1 == the level number being played.
 	return (room_counter + 1) % 4 == 0
 
+# ---------------------------------------------------------------------------
+# Boss shuffle bag — every boss appears once per cycle, never twice in a row.
+# ---------------------------------------------------------------------------
+var _boss_pool: Array = []
+var _last_boss_scene: String = ""
+
+func reset_boss_pool() -> void:
+	_boss_pool = []
+	_last_boss_scene = ""
+
 func get_boss_scene() -> String:
-	var boss_index := room_counter / 4
-	return BOSS_SCENES[boss_index % BOSS_SCENES.size()]
+	if _boss_pool.is_empty():
+		_boss_pool = BOSS_SCENES.duplicate()
+		_boss_pool.shuffle()
+		# If the top of the fresh deck matches the last boss used, swap it out
+		# so the same boss never appears twice in a row across cycles.
+		if _last_boss_scene != "" and _boss_pool.size() > 1 and _boss_pool[0] == _last_boss_scene:
+			var swap_idx := randi_range(1, _boss_pool.size() - 1)
+			var tmp: String = _boss_pool[0]
+			_boss_pool[0] = _boss_pool[swap_idx]
+			_boss_pool[swap_idx] = tmp
+	var scene: String = _boss_pool.pop_front()
+	_last_boss_scene = scene
+	return scene
 
 func get_boss_companion_count() -> int:
 	# Slower scaling than normal enemies — uses boss_index instead of room_counter.

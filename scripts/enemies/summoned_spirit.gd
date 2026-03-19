@@ -17,5 +17,5 @@ func _ai_update(delta: float) -> void:
 	velocity = _dir_to_player() * SPIRIT_SPEED
 	_contact_cooldown = max(0.0, _contact_cooldown - delta)
 	if _dist_to_player() < 22.0 and _contact_cooldown <= 0.0:
-		player.take_damage(CONTACT_DAMAGE)
+		player.take_damage(CONTACT_DAMAGE, self)
 		_contact_cooldown = CONTACT_COOLDOWN

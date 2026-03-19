@@ -86,8 +86,25 @@ func take_damage(amount: int) -> void:
 func _on_death() -> void:
 	if drop_core_type != 0:
 		_spawn_core_pickup()
+	# Life Steal — restore 2 HP to the player on kill
+	if GameState.player_perks.has("life_steal"):
+		var p := get_tree().get_first_node_in_group("player")
+		if p and is_instance_valid(p):
+			p.heal(2)
+	# Death Burst — explode for 20 AoE damage to nearby enemies
+	if GameState.player_perks.has("death_burst"):
+		_spawn_death_burst()
 	died.emit()
 	queue_free()
+
+func _spawn_death_burst() -> void:
+	const BURST_RADIUS := 60.0
+	const BURST_DAMAGE := 20
+	for enemy in get_tree().get_nodes_in_group("enemy"):
+		if enemy == self or not is_instance_valid(enemy):
+			continue
+		if global_position.distance_to(enemy.global_position) <= BURST_RADIUS:
+			enemy.take_damage(BURST_DAMAGE)
 
 func _spawn_core_pickup() -> void:
 	var pickup = load("res://scenes/core_system/CorePickup.tscn").instantiate()

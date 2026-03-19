@@ -20,5 +20,5 @@ func _ai_update(delta: float) -> void:
 	velocity    = _dir_to_player() * MOVE_SPEED
 	_contact_cd = maxf(0.0, _contact_cd - delta)
 	if _dist_to_player() < 22.0 and _contact_cd <= 0.0:
-		player.take_damage(CONTACT_DAMAGE)
+		player.take_damage(CONTACT_DAMAGE, self)
 		_contact_cd = CONTACT_CD

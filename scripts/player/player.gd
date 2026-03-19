@@ -13,6 +13,7 @@ const PHASE_COOLDOWN = 8.0
 const SHIELD_RECHARGE = 10.0
 const SUMMON_COOLDOWN = 15.0
 const MAX_HEALTH = 100
+const BASE_SHOOT_COOLDOWN := 0.20  # seconds between auto-fire shots
 
 var health := MAX_HEALTH
 var is_dashing := false
@@ -30,6 +31,8 @@ var _dash_start_pos := Vector2.ZERO
 
 var core_slots: Array = [CoreType.NONE, CoreType.NONE, CoreType.NONE]
 var can_attack := true  # rooms can gate this (e.g. PowerZoneRoom)
+var _shoot_timer := 0.0
+var _iron_will_available := true
 
 signal health_changed(current: int, maximum: int)
 signal died
@@ -56,8 +59,10 @@ func _physics_process(delta: float) -> void:
 			if _has_core(CoreType.EXPLOSION):
 				_spawn_dash_explosion()
 	else:
-		velocity = _get_move_direction() * SPEED
+		velocity = _get_move_direction() * _move_speed()
 
+	if _shoot_timer > 0.0:
+		_shoot_timer -= delta
 	if dash_cooldown_timer > 0.0:
 		dash_cooldown_timer -= delta
 	if fire_bomb_cooldown_timer > 0.0:
@@ -79,6 +84,13 @@ func _physics_process(delta: float) -> void:
 	if _summon_cooldown > 0.0:
 		_summon_cooldown -= delta
 
+	# Auto-Fire / Rapid-Fire: hold left mouse to shoot at cooldown rate
+	if (_has_perk("auto_fire") or _has_perk("rapid_fire")) \
+			and Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT) \
+			and can_attack and _shoot_timer <= 0.0:
+		_shoot()
+		_shoot_timer = _current_shoot_cd()
+
 	move_and_slide()
 
 func _get_move_direction() -> Vector2:
@@ -92,6 +104,25 @@ func _get_move_direction() -> Vector2:
 	if Input.is_key_pressed(KEY_D) or Input.is_key_pressed(KEY_RIGHT):
 		dir.x += 1
 	return dir.normalized()
+
+func _has_perk(id: String) -> bool:
+	return GameState.player_perks.has(id)
+
+func _move_speed() -> float:
+	if _has_perk("berserker") and health <= 30:
+		return SPEED * 1.5
+	return SPEED
+
+func _current_shoot_cd() -> float:
+	var cd := BASE_SHOOT_COOLDOWN
+	if _has_perk("rapid_fire"):
+		cd *= 0.6
+	if _has_perk("berserker") and health <= 30:
+		cd *= 0.5
+	return cd
+
+func _active_cooldown(base: float) -> float:
+	return base * 0.7 if _has_perk("overclock") else base
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseButton and event.pressed:
@@ -124,6 +155,10 @@ func _spawn_projectile(dir: Vector2) -> void:
 	get_parent().add_child(p)
 	p.global_position = global_position
 	p.direction = dir
+	if _has_perk("stopping_power"):
+		p.damage = int(p.damage * 1.3)
+	if _has_perk("piercing_shot"):
+		p.piercing = true
 	if _has_core(CoreType.ICE):
 		p.apply_slow = true
 	if _has_core(CoreType.LIGHTNING):
@@ -141,6 +176,13 @@ func _try_dash() -> void:
 	is_dashing = true
 	dash_timer = _dash_duration()
 	dash_cooldown_timer = DASH_COOLDOWN
+	if _has_perk("gravity_push"):
+		for enemy in get_tree().get_nodes_in_group("enemy"):
+			if not is_instance_valid(enemy):
+				continue
+			var push_dir := enemy.global_position - global_position
+			if push_dir.length() <= 120.0:
+				enemy.velocity += push_dir.normalized() * 400.0
 
 func _dash_speed() -> float:
 	return DASH_SPEED * (2.0 if _has_core(CoreType.DASH) else 1.0)
@@ -172,14 +214,14 @@ func _drop_fire_bomb() -> void:
 	var bomb = fire_bomb_scene.instantiate()
 	get_parent().add_child(bomb)
 	bomb.global_position = global_position
-	fire_bomb_cooldown_timer = FIRE_BOMB_COOLDOWN
+	fire_bomb_cooldown_timer = _active_cooldown(FIRE_BOMB_COOLDOWN)
 
 func _activate_phase() -> void:
 	if _is_phasing or _phase_cooldown > 0.0:
 		return
 	_is_phasing = true
 	_phase_timer = PHASE_DURATION
-	_phase_cooldown = PHASE_COOLDOWN
+	_phase_cooldown = _active_cooldown(PHASE_COOLDOWN)
 	_visual.modulate.a = 0.35
 
 func _summon_ally() -> void:
@@ -188,7 +230,7 @@ func _summon_ally() -> void:
 	var ally = summon_ally_scene.instantiate()
 	get_parent().add_child(ally)
 	ally.global_position = global_position
-	_summon_cooldown = SUMMON_COOLDOWN
+	_summon_cooldown = _active_cooldown(SUMMON_COOLDOWN)
 
 # --- Core System ---
 
@@ -211,15 +253,24 @@ func _has_core(type: int) -> bool:
 
 # --- Health ---
 
-func take_damage(amount: int) -> void:
+func take_damage(amount: int, source: Node = null) -> void:
 	if _is_phasing:
 		return
 	if _has_core(CoreType.SHIELD) and _shield_active:
 		_shield_active = false
 		_shield_recharge_timer = SHIELD_RECHARGE
 		return
+	# Iron Will: survive one killing blow per room at 1 HP
+	if _has_perk("iron_will") and _iron_will_available and health - amount <= 0:
+		health = 1
+		_iron_will_available = false
+		health_changed.emit(health, MAX_HEALTH)
+		return
 	health = max(0, health - amount)
 	health_changed.emit(health, MAX_HEALTH)
+	# Thorns: reflect 50% of contact damage back to the attacker
+	if source != null and is_instance_valid(source) and source.has_method("take_damage") and _has_perk("thorns"):
+		source.take_damage(maxi(1, amount / 2))
 	if health == 0:
 		died.emit()
 

@@ -46,7 +46,7 @@ func _ai_update(delta: float) -> void:
 
 	# Contact damage (whether visible or not — decoys also do this)
 	if _dist_to_player() < 46.0 and _contact_cd <= 0.0:
-		player.take_damage(CONTACT_DAMAGE)
+		player.take_damage(CONTACT_DAMAGE, self)
 		_contact_cd = CONTACT_CD
 
 	# Shoot a 3-projectile spread

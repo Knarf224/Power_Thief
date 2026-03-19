@@ -20,7 +20,7 @@ var _contact_cd   := 0.0
 
 func _ready() -> void:
 	boss_name       = "The Plague Lord"
-	boss_perk_pool  = ["life_steal", "thorns", "death_burst"]
+	boss_perk_pool  = ["life_steal", "thorns", "death_burst", "iron_will"]
 	companion_scene = "res://scenes/enemies/PoisonToad.tscn"
 	super()
 	max_health = 400
@@ -33,7 +33,7 @@ func _ai_update(delta: float) -> void:
 	velocity = _dir_to_player() * MOVE_SPEED
 
 	if _dist_to_player() < 52.0 and _contact_cd <= 0.0:
-		player.take_damage(CONTACT_DAMAGE)
+		player.take_damage(CONTACT_DAMAGE, self)
 		_contact_cd = CONTACT_CD
 
 	if _shoot_timer <= 0.0:
