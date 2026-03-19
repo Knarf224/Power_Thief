@@ -6,16 +6,17 @@ Bosses appear at **levels 4, 8, 12, 16…** (every 4th level). They are not thei
 
 ## Boss System Rules
 
-| Property                | Value / Rule                                                        |
-|-------------------------|---------------------------------------------------------------------|
-| Boss trigger            | `(room_counter + 1) % 4 == 0` — levels 4, 8, 12, 16…              |
-| Boss count per room     | Always 1                                                            |
-| Companion count         | Scales via `get_boss_companion_count()` — slower curve than normal  |
-| Companion scaling base  | 2 companions at boss level 1; each boss level adds ~50%             |
-| Companion curve (approx)| L4: 2, L8: 4, L12: 6, L16: 9, L20: 13                             |
-| Perk draw on boss death | 2 random perks shown; player picks 1                                |
-| Already-owned perks     | Still appear in the draw but are grayed out and unselectable        |
-| Max perks               | 8 total in the pool; player can hold all 8 over time                |
+| Property                | Value / Rule                                                                 |
+|-------------------------|------------------------------------------------------------------------------|
+| Boss trigger            | `(room_counter + 1) % 4 == 0` — levels 4, 8, 12, 16…                       |
+| Boss count per room     | Always 1                                                                     |
+| Companion count         | Scales via `get_boss_companion_count()` — flat formula, separate from normal |
+| Companion formula       | `2 + boss_index * 2`                                                         |
+| Companion curve         | L4: 2, L8: 4, L12: 6, L16: 8, L20: 10                                      |
+| Boss order              | Random shuffle-bag — all 5 seen before any repeat; never same boss twice in a row |
+| Perk draw on boss death | 2 random perks shown from that boss's pool; player picks 1                  |
+| Already-owned perks     | Still appear in the draw but are grayed out and unselectable                 |
+| Max perks               | 11 total in the pool; player can hold all 11 over time                       |
 
 ---
 
@@ -30,21 +31,21 @@ Bosses appear at **levels 4, 8, 12, 16…** (every 4th level). They are not thei
 
 **Concept:** A heavily armoured melee brute that defends a section of the room. Slow on approach but telegraphs devastating charges — the player must bait the charge, dodge to the side, and punish the recovery window. Forces constant repositioning.
 
-| Property               | Value   | Notes                                                           |
-|------------------------|---------|-----------------------------------------------------------------|
-| Max Health             | 350     | ~4× a Stone Golem                                              |
-| Walk Speed             | 45      | Very slow — gives the player room to breathe                   |
-| Charge Speed           | 700     | Faster than a player dash — commits fully to direction          |
-| Charge Windup          | 0.8s    | Visible telegraph before the charge launches                    |
+| Property               | Value      | Notes                                                           |
+|------------------------|------------|-----------------------------------------------------------------|
+| Max Health             | 350        | ~4× a Stone Golem                                              |
+| Walk Speed             | 45         | Very slow — gives the player room to breathe                   |
+| Charge Speed           | 700        | Faster than a player dash — commits fully to direction          |
+| Charge Windup          | 0.8s       | Visible telegraph before the charge launches                    |
 | Charge Distance        | Room width | Travels until it hits a wall or the player                   |
-| Charge Damage          | 40      | On collision with player                                        |
-| Stun Duration (self)   | 1.2s    | Warden is stunned after hitting a wall — damage window          |
-| Contact Damage         | 20      | Slow contact when not charging                                  |
-| Contact Cooldown       | 1.0s    |                                                                 |
-| Charge Cooldown        | 4.0s    | Time between charges                                            |
-| Shield Hits            | 2       | Iron plates absorb 2 hits before HP is touched; recharges 12s  |
+| Charge Damage          | 40         | On collision with player                                        |
+| Stun Duration (self)   | 1.2s       | Warden is stunned after hitting a wall — damage window          |
+| Contact Damage         | 20         | Slow contact when not charging                                  |
+| Contact Cooldown       | 1.0s       |                                                                 |
+| Charge Cooldown        | 4.0s       | Time between charges                                            |
+| Shield Hits            | 2          | Iron plates absorb 2 hits before HP is touched; recharges 12s  |
 | Companion Type         | Stone Golem                                                     |
-| Perk Drop Pool         | Stopping Power, Gravity Push, Thorns                            |
+| Perk Drop Pool         | Stopping Power, Gravity Push, Thorns, Berserker                 |
 
 **Phase behaviour (no phases yet — single health bar):**
 - Below 50% HP: charge cooldown reduces to 2.5s and charge speed increases to 900.
@@ -132,7 +133,7 @@ Bosses appear at **levels 4, 8, 12, 16…** (every 4th level). They are not thei
 | Contact Damage         | 12      |                                                                    |
 | Contact Cooldown       | 1.0s    |                                                                    |
 | Companion Type         | Poison Toad                                                        |
-| Perk Drop Pool         | Life Steal, Thorns, Death Burst                                    |
+| Perk Drop Pool         | Life Steal, Thorns, Death Burst, Iron Will                         |
 
 **Phase behaviour:**
 - Below 50% HP: shoot cooldown reduces to 1.0s and pool duration extends to 12s.
@@ -160,7 +161,7 @@ Bosses appear at **levels 4, 8, 12, 16…** (every 4th level). They are not thei
 | Storm Aura Tick Rate   | 0.4s    | = 15 DPS if player stands inside aura                              |
 | Chain Bolt (special)   | Every 6s fires a chain bolt that jumps to 3 targets for 15 dmg each |
 | Companion Type         | Lightning Sprite                                                   |
-| Perk Drop Pool         | Rapid Fire, Gravity Push, Death Burst                              |
+| Perk Drop Pool         | Rapid Fire, Gravity Push, Death Burst, Overclock                   |
 
 **Phase behaviour:**
 - Below 40% HP: storm aura radius expands to 160px and homing bolt shoot cooldown drops to 0.7s.
@@ -182,97 +183,122 @@ All bosses display a **floating health bar** positioned above the sprite (not in
 
 ## Perks
 
-Perks are permanent buffs granted by defeating a boss. They persist across all levels in `GameState.player_perks`. On boss death, 2 perks are randomly drawn from the pool; the player selects 1. Already-owned perks appear grayed out and cannot be selected (but can still be drawn, which wastes a slot in the pair — encourages collecting new perks early).
+Perks are permanent buffs granted by defeating a boss. They persist across all levels in `GameState.player_perks`. On boss death, 2 perks are randomly drawn from that boss's specific pool; the player selects 1. Already-owned perks appear grayed out and cannot be selected (but can still be drawn, which wastes a slot in the pair — encourages collecting new perks early).
 
-**Max perks a player can hold:** 8 (one of each — no duplicates)
+**All 11 perks are fully implemented** — gameplay effects are live, not display-only.
+
+**Max perks a player can hold:** 11 (one of each — no duplicates)
+
+Perks are displayed in the HUD below the LEVEL counter (top-right corner) as a list, one per line, in the format `SYMBOL  Name`.
 
 ---
 
 ### Perk Pool
 
-| # | Symbol | Name            | Effect                                                                              | Type    |
-|---|--------|-----------------|-------------------------------------------------------------------------------------|---------|
-| 1 | `∞`    | Auto-Fire       | Holding the fire button fires continuously at the player's fire rate                | Passive |
-| 2 | `≫`    | Rapid Fire      | Player fire rate increased by 40% (shoot cooldown × 0.6)                            | Passive |
-| 3 | `✦`    | Stopping Power  | Player shots deal +30% damage                                                       | Passive |
-| 4 | `⇒`    | Piercing Shot   | Player shots pass through enemies, hitting every target in their path               | Passive |
-| 5 | `※`    | Thorns          | When the player takes contact damage, the attacker receives 50% of the damage back  | Passive |
-| 6 | `♥`    | Life Steal      | Killing an enemy restores 2 HP (capped at max health)                               | Passive |
-| 7 | `✸`    | Death Burst     | Enemies explode on death dealing 20 AoE damage in a 60px radius                    | Passive |
-| 8 | `⚡`   | Berserker       | Below 30 HP: move speed ×1.5 and fire rate ×2                                      | Passive |
-| 9 | `◆`    | Iron Will       | Once per room, survive a killing blow at 1 HP instead of dying                      | Passive |
-|10 | `⊙`    | Overclock       | Active core cooldowns (Fire Bomb, Phase, Summon) reduced by 30%                     | Passive |
-|11 | `⊕`    | Gravity Push    | Dashing repels all enemies within 120px away from the player                        | Passive |
+| # | Symbol | ID              | Name            | Effect                                                                              | Type    |
+|---|--------|-----------------|-----------------|------------------------------------------------------------------------------------|---------|
+| 1 | `∞`    | auto_fire       | Auto-Fire       | Holding the fire button fires continuously at the player's fire rate               | Passive |
+| 2 | `≫`    | rapid_fire      | Rapid Fire      | Player fire rate increased by 40% (shoot cooldown × 0.6)                           | Passive |
+| 3 | `✦`    | stopping_power  | Stopping Power  | Player shots deal +30% damage                                                      | Passive |
+| 4 | `⇒`    | piercing_shot   | Piercing Shot   | Player shots pass through enemies, hitting every target in their path              | Passive |
+| 5 | `※`    | thorns          | Thorns          | When the player takes contact damage, the attacker receives 50% of the damage back | Passive |
+| 6 | `♥`    | life_steal      | Life Steal      | Killing an enemy restores 2 HP (capped at max health)                              | Passive |
+| 7 | `✸`    | death_burst     | Death Burst     | Enemies explode on death dealing 20 AoE damage in a 60px radius                   | Passive |
+| 8 | `⚡`   | berserker       | Berserker       | Below 30 HP: move speed ×1.5 and fire rate ×2                                     | Passive |
+| 9 | `◆`    | iron_will       | Iron Will       | Once per room, survive a killing blow at 1 HP instead of dying                     | Passive |
+|10 | `⊙`    | overclock       | Overclock       | Active core cooldowns (Fire Bomb, Phase, Summon) reduced by 30%                    | Passive |
+|11 | `⊕`    | gravity_push    | Gravity Push    | Dashing repels all enemies within 250px at 800px/s; blue shockwave ring FX on activation | Passive |
 
 ---
 
 ### Perk Details
 
-#### Auto-Fire
-- Currently the player must click to shoot. With this perk, holding the mouse button fires automatically at the normal fire rate.
-- Implementation: check `Input.is_action_pressed("fire")` instead of `_just_pressed` when perk is active.
+#### Auto-Fire (`∞`)
+- Holding the mouse button fires automatically at the normal fire rate.
+- Implementation: checks `Input.is_action_pressed("fire")` instead of `_just_pressed` when perk is active.
 
 ---
 
-#### Stopping Power
-- Each player projectile that hits an enemy applies a 30% speed reduction for 1.0s.
-- Stacks additively with the Ice Core slow (Ice Core: 40% slow → with Stopping Power: 70% slow for the Ice Core duration, 30% slow from plain shots).
-- Implementation: on hit, set `enemy.speed_multiplier = 0.7` and start a 1.0s timer to restore it.
-
----
-
-#### Gravity Push
-- On dash activation, all enemies within 120px are pushed directly away from the player's position at the moment of dash.
-- Push velocity: 400px/s applied for 0.3s (impulse, not sustained).
-- Implementation: in `player.gd` dash logic, iterate enemies group and apply `velocity += direction * 400` when perk is active.
-
----
-
-#### Life Steal
-- Each enemy that dies (is killed, not just damaged) restores 2 HP to the player.
-- Capped at `MAX_HEALTH`. Does not trigger on self-destructing enemies (Bomb Beetle explosion).
-- Implementation: connect to an enemy's `died` signal or check in the enemy death handler.
-
----
-
-#### Piercing Shot
-- Player projectiles no longer despawn on the first enemy hit. They continue travelling and can hit multiple enemies.
-- Still despawns at end of `Projectile Lifetime` (2.0s) or on wall collision.
-- Implementation: in `projectile.gd`, skip `queue_free()` on enemy hit when perk is active.
-
----
-
-#### Rapid Fire
+#### Rapid Fire (`≫`)
 - Multiplies the player's fire cooldown by 0.6 (40% faster firing).
 - Stacks multiplicatively if other fire rate modifiers are added later.
 - Implementation: `_shoot_cooldown *= 0.6` applied in `_ready()` when perk is detected.
 
 ---
 
-#### Thorns
+#### Stopping Power (`✦`)
+- Player projectiles deal 30% more damage.
+- Implementation: projectile damage multiplied by 1.3 when perk is active.
+
+---
+
+#### Piercing Shot (`⇒`)
+- Player projectiles no longer despawn on the first enemy hit. They continue travelling and can hit multiple enemies.
+- Still despawns at end of `Projectile Lifetime` (2.0s) or on wall collision.
+- Implementation: in `projectile.gd`, skip `queue_free()` on enemy hit when perk is active.
+
+---
+
+#### Thorns (`※`)
 - When the player receives contact damage from an enemy, that enemy takes `damage_received * 0.5` (rounded down, minimum 1).
 - Does not trigger from projectile or hazard damage — only direct contact.
 - Implementation: in `player.gd` `take_damage()`, if source is a contact attacker and perk is active, call `source.take_damage(damage / 2)`.
 
 ---
 
-#### Death Burst
+#### Life Steal (`♥`)
+- Each enemy that dies (is killed, not just damaged) restores 2 HP to the player.
+- Capped at `MAX_HEALTH`. Does not trigger on self-destructing enemies (Bomb Beetle explosion).
+- Implementation: connected to enemy `died` signal or checked in the enemy death handler.
+
+---
+
+#### Death Burst (`✸`)
 - When any enemy dies, it triggers a 60px radius explosion dealing 20 damage to all enemies (not the player) within range.
 - Works on all enemies including Summoned Spirits and Slime minis.
 - Can chain: if an explosion kills another enemy, that enemy also bursts.
+- Visual effect: orange expanding ring + spike FX (`scenes/fx/DeathBurstFx.tscn`, `scripts/fx/death_burst_fx.gd`).
+- Re-entrant death crash fixed — `_is_dying` guard on `base_enemy.take_damage()` prevents a chained burst from triggering double-death on an already-dying enemy.
 - Implementation: on enemy death, instantiate an AoE check at the death position; deal damage to overlapping enemies in the `enemy` group.
+
+---
+
+#### Berserker (`⚡`)
+- While the player's health is below 30 HP: move speed is multiplied by 1.5 and fire rate is multiplied by 2 (shoot cooldown halved).
+- Activates and deactivates dynamically as health crosses the 30 HP threshold.
+- Implementation: checked every frame in player `_process()`; multipliers applied/removed when threshold is crossed.
+
+---
+
+#### Iron Will (`◆`)
+- Once per room, if the player would be reduced to 0 HP or below, they survive at exactly 1 HP instead.
+- Resets at the start of each new room.
+- Implementation: flag `iron_will_used` checked in `player.take_damage()`; if the hit would be lethal and the flag is false, clamp health to 1 and set the flag.
+
+---
+
+#### Overclock (`⊙`)
+- Active core cooldowns for Fire Core, Phase Core, and Summon Core are each reduced by 30%.
+- Implementation: cooldown values multiplied by 0.7 when perk is detected in `_ready()`.
+
+---
+
+#### Gravity Push (`⊕`)
+- On dash activation, all enemies within **250px** are pushed directly away from the player's position at **800px/s** as an impulse.
+- Blue shockwave ring visual effect plays at the player's position on each activation (`scenes/fx/GravityPushFx.tscn`, `scripts/fx/gravity_push_fx.gd`).
+- Implementation: in `player.gd` dash logic, iterate the `enemy` group and apply `velocity += direction * 800` for enemies within 250px when perk is active.
 
 ---
 
 ## Perk × Boss Drop Matrix
 
-| Boss           | Perk Pool                                  |
-|----------------|--------------------------------------------|
-| The Warden     | Stopping Power, Gravity Push, Thorns       |
-| The Lich       | Rapid Fire, Piercing Shot, Auto-Fire       |
-| The Phantom    | Piercing Shot, Auto-Fire, Life Steal       |
-| The Plague Lord| Life Steal, Thorns, Death Burst            |
-| The Storm Tyrant | Rapid Fire, Gravity Push, Death Burst   |
+| Boss             | Perk Pool                                              |
+|------------------|--------------------------------------------------------|
+| The Warden       | Stopping Power (`✦`), Gravity Push (`⊕`), Thorns (`※`), Berserker (`⚡`) |
+| The Lich         | Rapid Fire (`≫`), Piercing Shot (`⇒`), Auto-Fire (`∞`) |
+| The Phantom      | Piercing Shot (`⇒`), Auto-Fire (`∞`), Life Steal (`♥`) |
+| The Plague Lord  | Life Steal (`♥`), Thorns (`※`), Death Burst (`✸`), Iron Will (`◆`) |
+| The Storm Tyrant | Rapid Fire (`≫`), Gravity Push (`⊕`), Death Burst (`✸`), Overclock (`⊙`) |
 
 > The 2 perks shown on boss death are randomly drawn **from that boss's specific pool**, not the global pool. This loosely ties perk flavour to boss theme while still providing some randomness.
 
@@ -289,14 +315,16 @@ The perk UI fires **after all enemies in the room are dead** (not just the boss)
 5. `_pick()` appends to `GameState.player_perks`, unpauses, frees the UI. Exits are already open.
 6. `GameState.boss_defeated_this_level` is reset to `false` in `next_room_scene()`.
 
+---
+
 ## Implementation Checklist
 
 ### GameState
 - [x] `player_perks: Array` — list of owned perk IDs (e.g. `["rapid_fire", "thorns"]`)
 - [x] `boss_defeated_this_level: bool` — set true on boss death, reset each room transition
 - [x] `is_boss_level() -> bool` — returns `(room_counter + 1) % 4 == 0`
-- [x] `get_boss_scene() -> String` — cycles through `BOSS_SCENES` in order by `room_counter / 4`
-- [x] `get_boss_companion_count() -> int` — uses slower 50% growth indexed by boss number
+- [x] `get_boss_scene() -> String` — cycles through `BOSS_SCENES` in random shuffle-bag order (no repeats until all 5 seen, never same twice in a row)
+- [x] `get_boss_companion_count() -> int` — flat formula: `2 + boss_index * 2`
 - [x] `stage_perk_select(a, b)` — stores perks and sets flag; no UI yet
 - [x] `open_pending_perk_select()` — deferred call that instantiates and adds `PerkSelect.tscn`
 
@@ -316,8 +344,28 @@ The perk UI fires **after all enemies in the room are dead** (not just the boss)
 
 ### Shared boss infrastructure
 - [x] `scripts/enemies/bosses/boss_base.gd` — floating health bar (`_draw()`), `_is_dying` guard, perk drop staging
-- [x] `scripts/ui/perk_select.gd` — 2-choice panel, shows "Already Owned" for duplicates
+- [x] `scripts/ui/perk_select.gd` — 2-choice panel, shows "Already Owned" for duplicates, displays perk symbols
 - [x] `scenes/ui/PerkSelect.tscn`
+
+### FX scenes & scripts
+- [x] `scenes/fx/DeathBurstFx.tscn` / `scripts/fx/death_burst_fx.gd` — orange ring + spike burst on enemy death
+- [x] `scenes/fx/GravityPushFx.tscn` / `scripts/fx/gravity_push_fx.gd` — blue shockwave ring on dash repel
+
+### Perk gameplay implementations
+- [x] Auto-Fire — hold-to-fire input
+- [x] Rapid Fire — shoot cooldown × 0.6
+- [x] Stopping Power — projectile damage × 1.3
+- [x] Piercing Shot — projectile passes through enemies
+- [x] Thorns — contact retaliation 50%
+- [x] Life Steal — heal 2 HP on kill
+- [x] Death Burst — 60px AoE explosion on enemy death with visual FX
+- [x] Berserker — speed × 1.5 and fire rate × 2 below 30 HP
+- [x] Iron Will — survive one killing blow at 1 HP per room
+- [x] Overclock — active core cooldowns × 0.7
+- [x] Gravity Push — 250px repel at 800px/s on dash with visual FX
+
+### HUD perk display
+- [x] Perks listed below LEVEL counter (top-right) as `SYMBOL  Name` lines
 
 ### Room integration
 - [x] All 4 room types check `GameState.is_boss_level()` in `_ready()` and call `_spawn_boss()`
@@ -326,5 +374,4 @@ The perk UI fires **after all enemies in the room are dead** (not just the boss)
 - [x] All 4 room state machines skip core activation on boss levels; open exits + show perk UI instead
 
 ### Pending
-- [ ] Implement actual perk gameplay effects (all 8 perks currently display name only)
-- [ ] Win screen / end condition after all 5 boss cycles
+- [ ] Win screen / end condition after all boss cycles complete

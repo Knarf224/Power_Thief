@@ -14,29 +14,30 @@ Use this file to track and balance all entity stats. Update it whenever values c
 | Dash Speed        | 500    | Toward mouse cursor                        |
 | Dash Duration     | 0.15s  | How long the dash lasts                    |
 | Dash Cooldown     | 0.8s   | Time before dash can be used again         |
-| Projectile Damage | 10     | Per shot                                   |
+| Projectile Damage | 18     | Per shot                                   |
 | Projectile Speed  | 500    |                                            |
 | Projectile Life   | 2.0s   | Despawns after this if no collision        |
 | Core Slots        | 3      | Max equippable power cores                 |
+| Sprite            | `assets/sprites/player_sprite.png` at 1.875× scale |
 
 ---
 
 ## Enemies
 
 ### Fire Mage
-> `scripts/enemies/fire_mage.gd` | Color: Red
+> `scripts/enemies/fire_mage.gd` | Color: Red | Sprite: 3× scale
 
 | Property             | Value  | Notes                                             |
 |----------------------|--------|---------------------------------------------------|
 | Max Health           | 40     | Lowest HP — fragile but dangerous at range        |
-| Move Speed           | 100     | Inherited from base                               |
+| Move Speed           | 100    | Inherited from base                               |
 | Preferred Distance   | 160px  | Tries to maintain this gap from player            |
 | Distance Tolerance   | ±30px  | Starts moving when outside this window            |
 | Shoot Cooldown       | 1.0s   | Fires every 1 second                              |
 | Projectile Damage    | 20     | Double player shot damage                         |
 | Projectile Speed     | 300    | Slower than player projectile                     |
 | Projectile Lifetime  | 3.0s   |                                                   |
-| Drops                | Fire Core (TODO)                                  |
+| Drops                | Fire Core                                         |
 
 ---
 
@@ -53,7 +54,7 @@ Use this file to track and balance all entity stats. Update it whenever values c
 | Dash Cooldown    | 1.5s   |                                                     |
 | Contact Damage   | 15     | Highest contact damage of all enemies               |
 | Contact Cooldown | 0.8s   | Can only deal contact damage once per 0.8s          |
-| Drops            | Dash Core (TODO)                                    |
+| Drops            | Dash Core                                           |
 
 ---
 
@@ -68,21 +69,21 @@ Use this file to track and balance all entity stats. Update it whenever values c
 | Contact Damage        | 8      | Lowest damage — danger is the split mechanic   |
 | Contact Cooldown      | 0.6s   |                                                |
 | Split on Death        | Yes    | Full slime spawns 2 minis; minis do not split  |
-| Drops                 | Split Core (TODO)                               |
+| Drops                 | Split Core (last mini)                          |
 
 ---
 
 ### Ghost
 > `scripts/enemies/ghost.gd` | Color: White
 
-| Property             | Value  | Notes                                                   |
-|----------------------|--------|---------------------------------------------------------|
-| Max Health           | 30     | Low HP — but only reachable up close                    |
-| Move Speed           | 90     | Drifts toward player constantly                         |
-| Contact Damage       | 12     |                                                         |
-| Contact Cooldown     | 0.8s   |                                                         |
-| Vulnerability Range  | 100px  | Only takes damage when player is within this distance   |
-| Default State        | Intangible | Immune to all damage outside vulnerability range    |
+| Property             | Value      | Notes                                                   |
+|----------------------|------------|---------------------------------------------------------|
+| Max Health           | 30         | Low HP — but only reachable up close                    |
+| Move Speed           | 90         | Drifts toward player constantly                         |
+| Contact Damage       | 12         |                                                         |
+| Contact Cooldown     | 0.8s       |                                                         |
+| Vulnerability Range  | 100px      | Only takes damage when player is within this distance   |
+| Default State        | Intangible | Immune to all damage outside vulnerability range        |
 | Drops                | Phase Core                                              |
 
 ---
@@ -90,25 +91,25 @@ Use this file to track and balance all entity stats. Update it whenever values c
 ### Bomb Beetle
 > `scripts/enemies/bomb_beetle.gd` | Color: Brown/Orange
 
-| Property             | Value  | Notes                                             |
-|----------------------|--------|---------------------------------------------------|
-| Max Health           | 45     |                                                   |
-| Move Speed           | 70     | Slow — danger is the death explosion              |
-| Contact Damage       | 10     |                                                   |
-| Contact Cooldown     | 0.8s   |                                                   |
-| Death Explosion Radius | 80px | AoE on death — punishes close-range kills         |
-| Death Explosion Damage | 70   | Applied to player if in range                     |
-| Drops                | Explosion Core                                    |
+| Property               | Value  | Notes                                             |
+|------------------------|--------|---------------------------------------------------|
+| Max Health             | 45     |                                                   |
+| Move Speed             | 70     | Slow — danger is the death explosion              |
+| Contact Damage         | 10     |                                                   |
+| Contact Cooldown       | 0.8s   |                                                   |
+| Death Explosion Radius | 80px   | AoE on death — punishes close-range kills         |
+| Death Explosion Damage | 70     | Applied to player if in range                     |
+| Drops                  | Explosion Core                                    |
 
 ---
 
 ### Ice Witch
-> `scripts/enemies/ice_witch.gd` | Color: Cyan
+> `scripts/enemies/ice_witch.gd` | Color: Cyan | Sprite: 3× scale
 
 | Property             | Value  | Notes                                             |
 |----------------------|--------|---------------------------------------------------|
 | Max Health           | 40     | Fragile but crippling at range                    |
-| Move Speed           | 100     |                                                   |
+| Move Speed           | 100    |                                                   |
 | Preferred Distance   | 180px  | Keeps more distance than Fire Mage                |
 | Distance Tolerance   | ±30px  |                                                   |
 | Shoot Cooldown       | 1.5s   | Slower fire rate than Fire Mage                   |
@@ -200,40 +201,40 @@ Use this file to track and balance all entity stats. Update it whenever values c
 
 | Source                                      | Damage              | Cooldown        |
 |---------------------------------------------|---------------------|-----------------|
-| Player Projectile                           | 10                  | Click speed     |
+| Player Projectile                           | 18                  | Click speed     |
 | Fire Mage Projectile                        | 20                  | 1.0s per shot   |
 | Assassin Contact                            | 15                  | 0.8s            |
 | Slime Contact (full)                        | 8                   | 0.6s            |
 | Slime Contact (mini)                        | 8                   | 0.6s            |
-| Ghost Contact                   | 12                  | 0.8s            |
-| Bomb Beetle Contact             | 10                  | 0.8s            |
-| Bomb Beetle Death Explosion     | 70                  | Once (on death) |
-| Ice Witch Projectile            | 15 + 50% slow (3s)  | 1.5s per shot   |
-| Lightning Sprite Projectile     | 12 (8 per chain)    | 0.8s per shot   |
-| Stone Golem Contact             | 25                  | 1.2s            |
-| Necromancer Projectile          | 15                  | 2.0s per shot   |
-| Summoned Spirit Contact         | 15                  | 0.8s            |
-| Poison Toad Projectile          | 5 + 30 poison DoT   | 1.2s per shot   |
+| Ghost Contact                               | 12                  | 0.8s            |
+| Bomb Beetle Contact                         | 10                  | 0.8s            |
+| Bomb Beetle Death Explosion                 | 70                  | Once (on death) |
+| Ice Witch Projectile                        | 15 + 50% slow (3s)  | 1.5s per shot   |
+| Lightning Sprite Projectile                 | 12 (8 per chain)    | 0.8s per shot   |
+| Stone Golem Contact                         | 25                  | 1.2s            |
+| Necromancer Projectile                      | 15                  | 2.0s per shot   |
+| Summoned Spirit Contact                     | 15                  | 0.8s            |
+| Poison Toad Projectile                      | 5 + 30 poison DoT   | 1.2s per shot   |
 
 ---
 
 ## Hits to Kill Reference
-> Based on player projectile damage of 10
+> Based on player projectile damage of 18 (ceiling division — partial hit counts as a full shot)
 
 | Enemy                              | HP  | Shots to Kill                           |
 |------------------------------------|-----|-----------------------------------------|
-| Fire Mage                          | 40  | 4                                       |
-| Assassin                           | 50  | 5                                       |
-| Slime (full)                       | 60  | 6 (then splits)                         |
-| Slime (mini)                       | 30  | 3                                       |
-| Ghost                  | 30  | 3 (only hittable within 100px)          |
-| Bomb Beetle            | 45  | 5 (death explosion 70 dmg — keep range) |
-| Ice Witch              | 40  | 4                                       |
-| Lightning Sprite       | 20  | 2                                       |
-| Stone Golem            | 80  | 9 (first shot hits shield)              |
-| Necromancer            | 35  | 4                                       |
-| Summoned Spirit        | 10  | 1                                       |
-| Poison Toad            | 50  | 5                                       |
+| Fire Mage                          | 40  | 3                                       |
+| Assassin                           | 50  | 3                                       |
+| Slime (full)                       | 60  | 4 (then splits)                         |
+| Slime (mini)                       | 30  | 2                                       |
+| Ghost                              | 30  | 2 (only hittable within 100px)          |
+| Bomb Beetle                        | 45  | 3 (death explosion 70 dmg — keep range) |
+| Ice Witch                          | 40  | 3                                       |
+| Lightning Sprite                   | 20  | 2                                       |
+| Stone Golem                        | 80  | 5 (first shot hits shield)              |
+| Necromancer                        | 35  | 2                                       |
+| Summoned Spirit                    | 10  | 1                                       |
+| Poison Toad                        | 50  | 3                                       |
 
 ---
 
@@ -242,12 +243,12 @@ Use this file to track and balance all entity stats. Update it whenever values c
 ### Dash Core
 > Dropped by: Rogue Assassin | Color: Purple star
 
-| Property         | Value  | Notes                                              |
-|------------------|--------|----------------------------------------------------|
-| Activation       | Passive | Always active while equipped                      |
+| Property         | Value       | Notes                                              |
+|------------------|-------------|----------------------------------------------------|
+| Activation       | Passive     | Always active while equipped                       |
 | Effect           | Doubles dash speed and duration                    |
-| Dash Speed       | 500 → 1000 | Applied multiplicatively                    |
-| Dash Duration    | 0.15s → 0.30s | Applied multiplicatively                 |
+| Dash Speed       | 500 → 1000  | Applied multiplicatively                           |
+| Dash Duration    | 0.15s → 0.30s | Applied multiplicatively                         |
 | Slot Type        | Passive — no keybind required                      |
 
 ---
@@ -255,14 +256,14 @@ Use this file to track and balance all entity stats. Update it whenever values c
 ### Fire Core
 > Dropped by: Fire Mage | Color: Orange star
 
-| Property         | Value  | Notes                                              |
-|------------------|--------|----------------------------------------------------|
-| Activation       | Slot key (1/2/3) | Whichever slot the core occupies             |
+| Property         | Value            | Notes                                              |
+|------------------|------------------|----------------------------------------------------|
+| Activation       | Slot key (1/2/3) | Whichever slot the core occupies                   |
 | Effect           | Drops a fire bomb at player's feet                 |
-| Fuse Time        | 1.5s   | Delay before explosion                             |
-| Explosion Radius | 80px   | AoE around bomb position                           |
-| Damage           | 40     | Applied to all enemies within radius               |
-| Cooldown         | 3.0s   | Cannot be spammed                                  |
+| Fuse Time        | 1.5s             | Delay before explosion                             |
+| Explosion Radius | 80px             | AoE around bomb position                           |
+| Damage           | 40               | Applied to all enemies within radius               |
+| Cooldown         | 3.0s             | Cannot be spammed                                  |
 | Slot Type        | Active — press the key for its slot                |
 
 ---
@@ -270,12 +271,12 @@ Use this file to track and balance all entity stats. Update it whenever values c
 ### Split Core
 > Dropped by: Slime (last mini) | Color: Green star
 
-| Property         | Value  | Notes                                              |
-|------------------|--------|----------------------------------------------------|
-| Activation       | Passive | Modifies every shot automatically                 |
+| Property         | Value   | Notes                                              |
+|------------------|---------|----------------------------------------------------|
+| Activation       | Passive | Modifies every shot automatically                  |
 | Effect           | Fires 2 projectiles per click in a V shape         |
-| Spread Angle     | ±15°   | Each projectile offset from mouse direction        |
-| Damage per shot  | 10     | Same as base projectile — double total if both hit |
+| Spread Angle     | ±15°    | Each projectile offset from mouse direction        |
+| Damage per shot  | 18      | Same as base projectile — double total if both hit |
 | Slot Type        | Passive — no keybind required                      |
 
 ---
@@ -283,12 +284,12 @@ Use this file to track and balance all entity stats. Update it whenever values c
 ### Phase Core
 > Dropped by: Ghost | Color: White star
 
-| Property         | Value  | Notes                                              |
-|------------------|--------|----------------------------------------------------|
-| Activation       | Slot key (1/2/3) | Whichever slot the core occupies             |
+| Property         | Value            | Notes                                              |
+|------------------|------------------|----------------------------------------------------|
+| Activation       | Slot key (1/2/3) | Whichever slot the core occupies                   |
 | Effect           | Player becomes intangible — takes no damage        |
-| Duration         | 1.5s   | Length of intangibility window                     |
-| Cooldown         | 8.0s   |                                                    |
+| Duration         | 1.5s             | Length of intangibility window                     |
+| Cooldown         | 8.0s             |                                                    |
 | Slot Type        | Active — press the key for its slot                |
 
 ---
@@ -296,12 +297,12 @@ Use this file to track and balance all entity stats. Update it whenever values c
 ### Explosion Core
 > Dropped by: Bomb Beetle | Color: Brown/Orange star
 
-| Property          | Value  | Notes                                             |
-|-------------------|--------|---------------------------------------------------|
-| Activation        | Passive | Triggers automatically on every dash             |
+| Property          | Value   | Notes                                             |
+|-------------------|---------|---------------------------------------------------|
+| Activation        | Passive | Triggers automatically on every dash              |
 | Effect            | Leaves an explosion at dash start position         |
-| Explosion Radius  | 80px   | Same radius as Fire Core bomb                     |
-| Explosion Damage  | 25     | Slightly less than Fire Core                      |
+| Explosion Radius  | 80px    | Same radius as Fire Core bomb                     |
+| Explosion Damage  | 25      | Slightly less than Fire Core                      |
 | Slot Type         | Passive — no keybind required                     |
 
 ---
@@ -309,13 +310,13 @@ Use this file to track and balance all entity stats. Update it whenever values c
 ### Ice Core
 > Dropped by: Ice Witch | Color: Cyan star
 
-| Property         | Value  | Notes                                              |
-|------------------|--------|----------------------------------------------------|
-| Activation       | Passive | Modifies every shot automatically                 |
+| Property         | Value   | Notes                                              |
+|------------------|---------|----------------------------------------------------|
+| Activation       | Passive | Modifies every shot automatically                  |
 | Effect           | Player shots apply a slow to enemies on hit        |
-| Slow Amount      | 40%    | Reduces enemy move speed by 40%                    |
-| Slow Duration    | 2.0s   |                                                    |
-| Damage           | 10     | Same as base — slow is the bonus                   |
+| Slow Amount      | 40%     | Reduces enemy move speed by 40%                    |
+| Slow Duration    | 2.0s    |                                                    |
+| Damage           | 18      | Same as base — slow is the bonus                   |
 | Slot Type        | Passive — no keybind required                      |
 
 ---
@@ -323,13 +324,13 @@ Use this file to track and balance all entity stats. Update it whenever values c
 ### Lightning Core
 > Dropped by: Lightning Sprite | Color: Yellow star
 
-| Property         | Value  | Notes                                              |
-|------------------|--------|----------------------------------------------------|
-| Activation       | Passive | Modifies every shot automatically                 |
+| Property         | Value   | Notes                                              |
+|------------------|---------|----------------------------------------------------|
+| Activation       | Passive | Modifies every shot automatically                  |
 | Effect           | Shots chain to nearby enemies on hit               |
-| Chain Range      | 120px  | Jump radius from hit enemy                         |
-| Chain Targets    | 2      | Max additional enemies hit per shot                |
-| Chain Damage     | 8      | Reduced from base 10 per jump                      |
+| Chain Range      | 120px   | Jump radius from hit enemy                         |
+| Chain Targets    | 2       | Max additional enemies hit per shot                |
+| Chain Damage     | 8       | Reduced from base 18 per jump                      |
 | Slot Type        | Passive — no keybind required                      |
 
 ---
@@ -337,12 +338,12 @@ Use this file to track and balance all entity stats. Update it whenever values c
 ### Shield Core
 > Dropped by: Stone Golem | Color: Gray star
 
-| Property           | Value  | Notes                                            |
-|--------------------|--------|--------------------------------------------------|
-| Activation         | Passive | Always active while equipped                    |
+| Property           | Value   | Notes                                            |
+|--------------------|---------|--------------------------------------------------|
+| Activation         | Passive | Always active while equipped                     |
 | Effect             | Absorbs one hit completely; recharges over time  |
-| Shield Hits        | 1      | Nullifies one hit regardless of damage           |
-| Recharge Time      | 10.0s  | After absorbing a hit, shield returns after 10s  |
+| Shield Hits        | 1       | Nullifies one hit regardless of damage           |
+| Recharge Time      | 10.0s   | After absorbing a hit, shield returns after 10s  |
 | Slot Type          | Passive — no keybind required                    |
 
 ---
@@ -350,14 +351,14 @@ Use this file to track and balance all entity stats. Update it whenever values c
 ### Summon Core
 > Dropped by: Necromancer | Color: Dark Purple star
 
-| Property         | Value  | Notes                                              |
-|------------------|--------|----------------------------------------------------|
-| Activation       | Slot key (1/2/3) | Whichever slot the core occupies             |
+| Property         | Value            | Notes                                              |
+|------------------|------------------|----------------------------------------------------|
+| Activation       | Slot key (1/2/3) | Whichever slot the core occupies                   |
 | Effect           | Summons a ghost ally that attacks nearby enemies   |
-| Ally Duration    | 8.0s   | Ghost disappears after this time                   |
-| Ally Damage      | 8      | Per attack                                         |
-| Ally Attack Rate | 1.0s   |                                                    |
-| Cooldown         | 15.0s  |                                                    |
+| Ally Duration    | 8.0s             | Ghost disappears after this time                   |
+| Ally Damage      | 8                | Per attack                                         |
+| Ally Attack Rate | 1.0s             |                                                    |
+| Cooldown         | 15.0s            |                                                    |
 | Slot Type        | Active — press the key for its slot                |
 
 ---
@@ -365,14 +366,14 @@ Use this file to track and balance all entity stats. Update it whenever values c
 ### Poison Core
 > Dropped by: Poison Toad | Color: Yellow-Green star
 
-| Property         | Value  | Notes                                              |
-|------------------|--------|----------------------------------------------------|
-| Activation       | Passive | Modifies every shot automatically                 |
+| Property         | Value   | Notes                                              |
+|------------------|---------|----------------------------------------------------|
+| Activation       | Passive | Modifies every shot automatically                  |
 | Effect           | Player shots apply poison DoT to enemies on hit    |
-| Poison Damage    | 5/tick | Damage per tick                                    |
-| Tick Rate        | 0.5s   |                                                    |
-| Poison Duration  | 3.0s   | Total: 30 poison damage per hit                    |
-| Direct Damage    | 10     | Base projectile damage unchanged                   |
+| Poison Damage    | 5/tick  | Damage per tick                                    |
+| Tick Rate        | 0.5s    |                                                    |
+| Poison Duration  | 3.0s    | Total: 30 poison damage per hit                    |
+| Direct Damage    | 18      | Base projectile damage unchanged                   |
 | Slot Type        | Passive — no keybind required                      |
 
 ---
@@ -381,9 +382,7 @@ Use this file to track and balance all entity stats. Update it whenever values c
 - Players start with **3 slots**
 - Cores drop **dimmed and inactive** until all enemies in the room are cleared
 - Only **one core can be looted per room** — the other disappears on pickup
-- If all 3 slots are full, picking up a new core **replaces slot 0**
-
----
+- If all 3 slots are full, picking up a new core **replaces slot 0** (Core Selection UI planned to fix this)
 
 ---
 
@@ -393,11 +392,11 @@ Use this file to track and balance all entity stats. Update it whenever values c
 
 | Boss | HP | Key Mechanic | Companion | Perk Pool |
 |---|---|---|---|---|
-| The Warden | 350 | 2-hit iron shield; charges walls, stunned on impact | Stone Golem | Stopping Power, Gravity Push, Thorns |
+| The Warden | 350 | 2-hit iron shield; charges walls, stunned on impact | Stone Golem | Stopping Power, Gravity Push, Thorns, Berserker |
 | The Lich | 220 | Invulnerable while spirits alive; summons 3 (or 5) per wave | Necromancer | Rapid Fire, Piercing Shot, Auto-Fire |
 | The Phantom | 180 | Only vulnerable 1.5s after teleport; spawns 2-3 decoys | Ghost | Piercing Shot, Auto-Fire, Life Steal |
-| The Plague Lord | 400 | Persistent poison floor pools; slowest boss | Poison Toad | Life Steal, Thorns, Death Burst |
-| The Storm Tyrant | 280 | Homing bolts + storm aura + chain bolt special | Lightning Sprite | Rapid Fire, Gravity Push, Death Burst |
+| The Plague Lord | 400 | Persistent poison floor pools; slowest boss | Poison Toad | Life Steal, Thorns, Death Burst, Iron Will |
+| The Storm Tyrant | 280 | Homing bolts + storm aura + chain bolt special | Lightning Sprite | Rapid Fire, Gravity Push, Death Burst, Overclock |
 
 **Boss-specific sub-entities:**
 
@@ -412,15 +411,13 @@ Use this file to track and balance all entity stats. Update it whenever values c
 ---
 
 ## Notes for Balancing
-- Player has **10x** the HP of a Fire Mage — currently very tanky relative to enemies
-- Assassin deals the most burst damage through its dash + contact combo
-- Slime is the most resource-intensive to kill (6 shots + 2x 3 shots = 12 total shots for full clear)
-- Fire Mage projectile speed (300) is faster now — dodging requires more active movement
-- **Stone Golem** is the tankiest enemy (80 HP + absorbs first hit) — 9 shots minimum, use crowd control cores
-- **Lightning Sprite** is the most fragile (20 HP, 2 shots) but fastest — hardest to hit
-- **Poison Toad** deals 35 total damage per hit (5 direct + 30 DoT) — highest sustained damage in the roster
-- **Ghost** is always immune until you close the gap to 100px — forces risky melee range; dash cores help
-- **Necromancer** should be prioritized: summons every 4s up to 3 spirits, each doing 15 contact damage — can snowball quickly
-- **Summoned Spirit** dies in 1 shot but must be cleared quickly; 3 active at once = 45 potential contact damage
-- **Bomb Beetle** death explosion now hits for 70 damage — nearly lethal in one blast, always kill from range
+- Player deals **18 damage per shot** — a significant increase from the earlier 10 damage. Fragile enemies (Ghost, Lightning Sprite, Necromancer) now die in 2 shots; mid-tier enemies die in 3.
+- Stone Golem is still the tankiest enemy (80 HP + absorbs first shot = minimum 5 shots), but is no longer as oppressive with higher base damage
+- Assassin and Slime now die much faster (3 and 4 shots respectively), which may reduce their perceived threat — monitor in playtesting
+- **Poison Toad** deals 35 total damage per hit (5 direct + 30 DoT) — still the highest sustained threat despite the player's increased damage
+- **Ghost** is always immune until you close the gap to 100px — forces risky melee range; now dies in 2 shots once in range
+- **Necromancer** should still be prioritized: summons every 4s up to 3 spirits, each doing 15 contact damage — still snowballs quickly, but now dies in 2 shots (35 HP / 18 dmg = 2)
+- **Summoned Spirit** still dies in 1 shot (10 HP)
+- **Bomb Beetle** death explosion hits for 70 damage — nearly lethal in one blast, always kill from range
 - Active cores (slot keys 1/2/3): Fire Core, Phase Core, Summon Core — each responds to the key of whichever slot it occupies, so multiple actives can coexist
+- **_enforce_bounds() safety net:** `base_enemy.gd` includes an `_enforce_bounds()` method that snaps any enemy whose `global_position` has escaped the viewport back to the room center. Ghost's `_physics_process` calls this explicitly since Ghost bypasses `move_and_slide()`. This prevents enemies disappearing off-screen permanently.

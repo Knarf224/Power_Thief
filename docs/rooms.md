@@ -43,10 +43,12 @@ Player state (health, cores, exit direction) persists across all room transition
 
 Enemy counts are computed by `GameState.get_enemy_count(2)` and scale with `room_counter` (the number of rooms completed before the current one). **Every room type uses the same total count** — special rooms distribute enemies differently but never exceed it.
 
-**Formula:** Each room adds 50% of the current count, minimum +2.
+**Formula:** Flat +2 per room, capped at 24.
 ```
-next_count = current_count + max(2, floor(current_count / 2))
+count = min(2 + room_counter * 2, 24)
 ```
+
+This replaced the earlier exponential formula (+50%/level) which produced runaway numbers at higher levels. The flat formula gives a predictable, tunable difficulty curve that hits the cap around level 12.
 
 **Progression (all rooms, base 2):**
 | Room # | room_counter | Total enemies |
@@ -54,10 +56,16 @@ next_count = current_count + max(2, floor(current_count / 2))
 | 1 | 0 | 2 |
 | 2 | 1 | 4 |
 | 3 | 2 | 6 |
-| 4 | 3 | 9 |
-| 5 | 4 | 13 |
-| 6 | 5 | 19 |
-| 7 | 6 | 28 |
+| 4 | 3 | 8 |
+| 5 | 4 | 10 |
+| 6 | 5 | 12 |
+| 7 | 6 | 14 |
+| 8 | 7 | 16 |
+| 9 | 8 | 18 |
+| 10 | 9 | 20 |
+| 11 | 10 | 22 |
+| 12 | 11 | 24 (cap) |
+| 13+ | 12+ | 24 (cap) |
 
 **How each room distributes the total:**
 | Room | Distribution |
@@ -66,6 +74,28 @@ next_count = current_count + max(2, floor(current_count / 2))
 | Hazard Floor | All enemies spawned at once |
 | Ambush Room | Total split across 4 corner rooms (`total / 4` per corner) |
 | Power Zone | Total split across waves (`total / wave_count` per wave) |
+
+---
+
+## Boss Companion Count
+
+On boss levels (every 4th room), companions scale with a **flat formula** indexed by boss encounter number, independent of the normal enemy scaling above.
+
+**Formula:**
+```
+companion_count = 2 + boss_index * 2
+```
+Where `boss_index` is 0 for the first boss encounter, incrementing by 1 each time a boss is fought.
+
+| Boss encounter | boss_index | Companions |
+|---|---|---|
+| Level 4  (encounter 1) | 0 | 2 |
+| Level 8  (encounter 2) | 1 | 4 |
+| Level 12 (encounter 3) | 2 | 6 |
+| Level 16 (encounter 4) | 3 | 8 |
+| Level 20 (encounter 5) | 4 | 10 |
+
+This replaced the earlier exponential companion curve (L4: 2, L8: 4, L12: 6, L16: 9, L20: 13). The flat formula keeps late boss rooms challenging but not overwhelming when combined with the boss itself.
 
 ---
 
@@ -106,7 +136,7 @@ next_count = current_count + max(2, floor(current_count / 2))
 | Center (first room) | All four sides |
 
 **Enemy pool:** All 10 types, equally weighted
-**Spawn count:** `GameState.get_enemy_count(2)` — spawned after 1.2s delay (2 → 4 → 6 → 9 → 13 ...)
+**Spawn count:** `GameState.get_enemy_count(2)` — spawned after 1.2s delay (2 → 4 → 6 → 8 → 10 … capped at 24)
 **Special behaviours:** None. May have a blackout overlay active (see Blackout Overlay below).
 
 **Floor colours:**
@@ -161,6 +191,7 @@ Cross-shaped corridor fills the centre. Four enclosed corner rooms are each sepa
 **Special behaviours:**
 - **Ghost wall-phasing:** Ghost enemies use direct `global_position` translation instead of `move_and_slide()`, allowing them to pass through all walls and inner dividers.
 - **Corner teleport:** Each inner corner has a 140×140 teleport zone. Enemies stuck in one for 1+ second are teleported to the room centre (960, 540). Controlled via `teleport_when_stuck`, `teleport_target`, `teleport_zones` flags on each spawned enemy.
+- **_enforce_bounds() safety net:** `base_enemy._enforce_bounds()` is called each physics frame and snaps any enemy whose `global_position` has escaped the viewport bounds back to the room center at (960, 540). Ghost explicitly calls `_enforce_bounds()` in its own `_physics_process` since it bypasses `move_and_slide()`. This fixed a bug where Ghost and other enemies occasionally drifted fully off-screen and became unreachable, soft-locking the room.
 
 **Teleport zone positions:**
 | Room | Zone rect | Corner |
