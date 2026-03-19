@@ -177,17 +177,17 @@ func _try_dash() -> void:
 	dash_timer = _dash_duration()
 	dash_cooldown_timer = DASH_COOLDOWN
 	if _has_perk("gravity_push"):
+		var fx := load("res://scenes/fx/GravityPushFx.tscn") as PackedScene
+		if fx:
+			var inst := fx.instantiate()
+			get_parent().add_child(inst)
+			inst.global_position = global_position
 		for enemy: Node2D in get_tree().get_nodes_in_group("enemy"):
 			if not is_instance_valid(enemy):
 				continue
 			var push_dir: Vector2 = enemy.global_position - global_position
-			if push_dir.length() <= 120.0:
-				var vp := get_viewport_rect()
-				var new_pos: Vector2 = enemy.global_position + push_dir.normalized() * 24.0
-				# Only apply push if the result stays well inside the room
-				if new_pos.x > 60.0 and new_pos.x < vp.size.x - 60.0 \
-						and new_pos.y > 60.0 and new_pos.y < vp.size.y - 60.0:
-					enemy.set("velocity", enemy.get("velocity") + push_dir.normalized() * 400.0)
+			if push_dir.length() <= 250.0:
+				enemy.set("velocity", enemy.get("velocity") + push_dir.normalized() * 800.0)
 
 func _dash_speed() -> float:
 	return DASH_SPEED * (2.0 if _has_core(CoreType.DASH) else 1.0)
