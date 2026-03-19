@@ -22,6 +22,8 @@ var _stuck_timer := 0.0
 
 signal died
 
+var _is_dying := false
+
 func _ready() -> void:
 	add_to_group("enemy")
 	player = get_tree().get_first_node_in_group("player")
@@ -79,8 +81,11 @@ func _ai_update(_delta: float) -> void:
 	pass
 
 func take_damage(amount: int) -> void:
+	if _is_dying:
+		return
 	health = max(0, health - amount)
 	if health == 0:
+		_is_dying = true
 		_on_death()
 
 func _on_death() -> void:
@@ -100,8 +105,17 @@ func _on_death() -> void:
 func _spawn_death_burst() -> void:
 	const BURST_RADIUS := 60.0
 	const BURST_DAMAGE := 20
+	# Spawn visual effect at this position before damaging neighbours
+	var fx := load("res://scenes/fx/DeathBurstFx.tscn") as PackedScene
+	if fx:
+		var inst := fx.instantiate()
+		get_parent().add_child(inst)
+		inst.global_position = global_position
+	# Damage nearby enemies — skip self and any already dying
 	for enemy: Node2D in get_tree().get_nodes_in_group("enemy"):
 		if enemy == self or not is_instance_valid(enemy):
+			continue
+		if enemy.is_queued_for_deletion():
 			continue
 		if global_position.distance_to(enemy.global_position) <= BURST_RADIUS:
 			enemy.call("take_damage", BURST_DAMAGE)
