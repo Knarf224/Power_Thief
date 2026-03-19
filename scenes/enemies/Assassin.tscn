@@ -14,5 +14,5 @@ shape = SubResource("RectangleShape2D_1")
 
 [node name="Visual" type="Sprite2D" parent="."]
 texture_filter = 1
-scale = Vector2(2.25, 2.25)
+scale = Vector2(1.6875, 1.6875)
 texture = ExtResource("2")
