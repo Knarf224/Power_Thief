@@ -21,6 +21,7 @@ summon_ally_scene = ExtResource("5")
 shape = SubResource("CircleShape2D_1")
 
 [node name="Visual" type="Sprite2D" parent="."]
+scale = Vector2(1.5, 1.5)
 texture = ExtResource("6")
 texture_filter = 1
 
