@@ -162,15 +162,12 @@ func get_boss_scene() -> String:
 	return scene
 
 func get_boss_companion_count() -> int:
-	# Slower scaling than normal enemies — uses boss_index instead of room_counter.
-	# Approximate curve: L4→2, L8→4, L12→6, L16→9, L20→13 companions
+	# Flat +2 companions per boss fought. Always fewer than a normal room.
+	# L4→2, L8→4, L12→6, L16→8, L20→10 companions
 	if staging_mode or quick_mode:
 		return 1
 	var boss_index := room_counter / 4
-	var count := 2
-	for i in boss_index:
-		count += maxi(2, count / 2)
-	return count
+	return 2 + boss_index * 2
 
 # ---------------------------------------------------------------------------
 # PERK SELECT — called by boss_base on boss death.
@@ -208,7 +205,7 @@ var god_mode     := false
 # the full weighted selection — you will see the actual rotation play out.
 # Use F5 (full game) so the room sequence starts from the beginning.
 # ---------------------------------------------------------------------------
-var quick_mode := true
+var quick_mode := false
 
 func get_enemy_count(default_count: int) -> int:
 	if staging_mode or quick_mode:
@@ -221,12 +218,6 @@ func get_enemy_count(default_count: int) -> int:
 	#   Ambush Room      → splits total across 4 corner rooms (total / 4 each)
 	#   Power Zone       → splits total across wave count   (total / waves each)
 	#
-	# Progression (default_count = 2):
-	#   level 1 = 2   level 2 = 4   level 3 = 6
-	#   level 4 = 9   level 5 = 13  level 6 = 19 ...
-	#
-	# Formula: each level adds 50% of current count, minimum +2.
-	var count := default_count
-	for i in room_counter:
-		count += maxi(2, count / 2)
-	return count
+	# Progression (default_count = 2, +2 per level, capped at 24):
+	#   L1=2  L2=4  L3=6  L4=boss  L5=10  L6=12  L7=14  L8=boss  L9=18 ...
+	return mini(default_count + room_counter * 2, 24)

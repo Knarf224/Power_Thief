@@ -2,7 +2,7 @@ extends Area2D
 
 const SPEED = 500.0
 const LIFETIME = 2.0
-const BASE_DAMAGE = 10
+const BASE_DAMAGE = 18
 
 var direction := Vector2.RIGHT
 var _timer := 0.0
