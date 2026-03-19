@@ -177,12 +177,12 @@ func _try_dash() -> void:
 	dash_timer = _dash_duration()
 	dash_cooldown_timer = DASH_COOLDOWN
 	if _has_perk("gravity_push"):
-		for enemy in get_tree().get_nodes_in_group("enemy"):
+		for enemy: Node2D in get_tree().get_nodes_in_group("enemy"):
 			if not is_instance_valid(enemy):
 				continue
-			var push_dir := enemy.global_position - global_position
+			var push_dir: Vector2 = enemy.global_position - global_position
 			if push_dir.length() <= 120.0:
-				enemy.velocity += push_dir.normalized() * 400.0
+				enemy.set("velocity", enemy.get("velocity") + push_dir.normalized() * 400.0)
 
 func _dash_speed() -> float:
 	return DASH_SPEED * (2.0 if _has_core(CoreType.DASH) else 1.0)
