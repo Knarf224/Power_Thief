@@ -85,10 +85,10 @@ func take_damage(amount: int) -> void:
 		return
 	health = max(0, health - amount)
 	if health == 0:
-		_is_dying = true
 		_on_death()
 
 func _on_death() -> void:
+	_is_dying = true
 	if drop_core_type != 0:
 		_spawn_core_pickup()
 	# Life Steal — restore 2 HP to the player on kill

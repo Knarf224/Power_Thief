@@ -9,7 +9,7 @@ const BAR_Y      := -58.0   # above the boss sprite
 var boss_name      := "Boss"
 var boss_perk_pool : Array  = []   # list of perk ID strings, e.g. ["rapid_fire", "thorns"]
 var companion_scene: String = ""   # path to companion enemy scene
-var _is_dying      := false        # guard against double-death from simultaneous hits
+# _is_dying is inherited from base_enemy — do not redeclare here
 
 func _ready() -> void:
 	super()
