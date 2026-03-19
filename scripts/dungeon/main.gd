@@ -2,10 +2,17 @@ extends Node2D
 
 enum RoomState { FIGHTING, CORES_ACTIVE, TRANSITION_READY }
 
-const ROOM_W = 960
-const ROOM_H = 540
+const ROOM_W = 1280
+const ROOM_H = 720
 const WALL_T = 32
 const EXIT_THRESHOLD = 60
+
+# How far from the wall enemies spawn along each border edge
+const SPAWN_INSET  = 80.0
+# Minimum distance from corners along the perpendicular axis
+const SPAWN_MARGIN = 100.0
+# Seconds to wait before enemies appear (prevents spawn-on-top-of-player)
+const SPAWN_DELAY  = 1.2
 
 const ENEMY_SCENES = [
 	"res://scenes/enemies/FireMage.tscn",
@@ -20,41 +27,85 @@ const ENEMY_SCENES = [
 	"res://scenes/enemies/PoisonToad.tscn",
 ]
 
-const SPAWN_POSITIONS = [
-	Vector2(150, 120),
-	Vector2(800, 410),
-]
 
-var _state := RoomState.FIGHTING
+var _state           := RoomState.FIGHTING
 var _enemies_spawned := false
-var _walls: Array = []
+var _walls:   Array  = []
+var _blackout: Node
+
+# Spawn delay
+var _spawn_timer   := 0.0
+var _spawn_pending := false
+var _spawn_count   := 0
+var _spawn_types:  Array = []
+
+# Which border sides are eligible for this room entry (excludes the player's side)
+var _eligible_sides: Array = []
 
 @onready var player: CharacterBody2D = $Player
 @onready var hud = $HUD
 
+
 func _ready() -> void:
 	_create_floor()
 	_create_walls()
-	_spawn_enemies()
+
 	player.health_changed.connect(hud.update_health)
 	player.cores_changed.connect(hud.update_cores)
 	player.died.connect(_on_player_died)
 	hud.update_health(player.health, player.MAX_HEALTH)
 	hud.update_cores(player.core_slots)
+
 	# Position player on the opposite side from where they exited last room
 	match GameState.exit_direction:
 		"west":  player.position = Vector2(ROOM_W - 80, ROOM_H / 2.0)
-		"east":  player.position = Vector2(80,          ROOM_H / 2.0)
+		"east":  player.position = Vector2(80,           ROOM_H / 2.0)
 		"north": player.position = Vector2(ROOM_W / 2.0, ROOM_H - 80)
 		"south": player.position = Vector2(ROOM_W / 2.0, 80)
 		_:       player.position = Vector2(ROOM_W / 2.0, ROOM_H / 2.0)
 
-func _process(_delta: float) -> void:
+	# Build eligible spawn sides — all four borders except the one the player entered from
+	var player_side := _entry_side(GameState.exit_direction)
+	_eligible_sides = ["north", "south", "west", "east"]
+	if player_side != "":
+		_eligible_sides.erase(player_side)
+
+	# Prepare delayed spawn
+	var types := ENEMY_SCENES.duplicate()
+	types.shuffle()
+	_spawn_types  = types
+	_spawn_pending = true
+
+	if GameState.is_boss_level():
+		_spawn_count = GameState.get_boss_companion_count()
+		_spawn_boss()
+	else:
+		_spawn_count = GameState.get_enemy_count(2)
+
+	_blackout = load("res://scripts/dungeon/blackout_overlay.gd").new()
+	_blackout.activation_chance = 0.90
+	add_child(_blackout)
+
+
+func _process(delta: float) -> void:
+	# Countdown to enemy spawn
+	if _spawn_pending:
+		_spawn_timer += delta
+		if _spawn_timer >= SPAWN_DELAY:
+			_spawn_pending = false
+			_do_spawn()
+
 	match _state:
 		RoomState.FIGHTING:
 			if _enemies_spawned and get_tree().get_nodes_in_group("enemy").is_empty():
-				_state = RoomState.CORES_ACTIVE
-				_activate_cores()
+				_blackout.deactivate()
+				if GameState.boss_defeated_this_level:
+					_open_exits()
+					GameState.open_pending_perk_select()
+					_state = RoomState.TRANSITION_READY
+				else:
+					_state = RoomState.CORES_ACTIVE
+					_activate_cores()
 
 		RoomState.CORES_ACTIVE:
 			if get_tree().get_nodes_in_group("core_pickup").is_empty():
@@ -72,18 +123,64 @@ func _process(_delta: float) -> void:
 			elif pos.y > ROOM_H + EXIT_THRESHOLD:
 				_load_next_room("south")
 
-func _spawn_enemies() -> void:
-	var types = ENEMY_SCENES.duplicate()
-	types.shuffle()
-	for i in 2:
-		var enemy = load(types[i]).instantiate()
+
+# Returns which side of the new room the player enters from
+# (opposite of the direction they exited the previous room)
+func _entry_side(exit_dir: String) -> String:
+	match exit_dir:
+		"west":  return "east"   # exited west → enters from east side
+		"east":  return "west"
+		"north": return "south"
+		"south": return "north"
+	return ""  # default / center start — no side to exclude
+
+
+func _border_position(side: String) -> Vector2:
+	match side:
+		"north": return Vector2(randf_range(SPAWN_MARGIN, ROOM_W - SPAWN_MARGIN), SPAWN_INSET)
+		"south": return Vector2(randf_range(SPAWN_MARGIN, ROOM_W - SPAWN_MARGIN), ROOM_H - SPAWN_INSET)
+		"west":  return Vector2(SPAWN_INSET, randf_range(SPAWN_MARGIN, ROOM_H - SPAWN_MARGIN))
+		"east":  return Vector2(ROOM_W - SPAWN_INSET, randf_range(SPAWN_MARGIN, ROOM_H - SPAWN_MARGIN))
+	# Fallback: random interior position (should never reach here)
+	return Vector2(randf_range(100, ROOM_W - 100), randf_range(100, ROOM_H - 100))
+
+
+func _do_spawn() -> void:
+	# On boss levels, companions use the boss's thematic enemy type
+	var companion_scene := ""
+	if GameState.is_boss_level():
+		var boss_node = get_tree().get_first_node_in_group("boss")
+		if boss_node and "companion_scene" in boss_node:
+			companion_scene = boss_node.companion_scene
+
+	for i in _spawn_count:
+		var scene_path: String
+		if companion_scene != "":
+			scene_path = companion_scene
+		else:
+			scene_path = _spawn_types[i % _spawn_types.size()]
+		var enemy = load(scene_path).instantiate()
 		add_child(enemy)
-		enemy.global_position = SPAWN_POSITIONS[i]
+		var side: String = _eligible_sides[randi() % _eligible_sides.size()]
+		enemy.global_position = _border_position(side)
 	_enemies_spawned = true
+
+func _spawn_boss() -> void:
+	var boss = load(GameState.get_boss_scene()).instantiate()
+	add_child(boss)
+	# Place boss on the far side of the room from the player's entry point
+	match GameState.exit_direction:
+		"west":  boss.global_position = Vector2(120,           ROOM_H / 2.0)
+		"east":  boss.global_position = Vector2(ROOM_W - 120,  ROOM_H / 2.0)
+		"north": boss.global_position = Vector2(ROOM_W / 2.0,  120)
+		"south": boss.global_position = Vector2(ROOM_W / 2.0,  ROOM_H - 120)
+		_:       boss.global_position = Vector2(ROOM_W / 2.0,  ROOM_H / 2.0)
+
 
 func _activate_cores() -> void:
 	for pickup in get_tree().get_nodes_in_group("core_pickup"):
 		pickup.activate()
+
 
 func _open_exits() -> void:
 	for wall in _walls:
@@ -91,17 +188,20 @@ func _open_exits() -> void:
 	_walls.clear()
 	hud.show_transition_prompt()
 
+
 func _load_next_room(direction: String) -> void:
 	GameState.player_health = player.health
-	GameState.player_cores = player.core_slots.duplicate()
+	GameState.player_cores  = player.core_slots.duplicate()
 	GameState.exit_direction = direction
 	get_tree().change_scene_to_file(GameState.next_room_scene())
+
 
 func _on_player_died() -> void:
 	hud.show_you_died()
 
+
 func _create_floor() -> void:
-	var floor_vis = Polygon2D.new()
+	var floor_vis := Polygon2D.new()
 	floor_vis.polygon = PackedVector2Array([
 		Vector2(0, 0), Vector2(ROOM_W, 0),
 		Vector2(ROOM_W, ROOM_H), Vector2(0, ROOM_H)
@@ -110,25 +210,27 @@ func _create_floor() -> void:
 	add_child(floor_vis)
 	move_child(floor_vis, 0)
 
+
 func _create_walls() -> void:
 	_make_wall(Vector2(ROOM_W / 2.0, -WALL_T / 2.0),         Vector2(ROOM_W + WALL_T * 2, WALL_T))
 	_make_wall(Vector2(ROOM_W / 2.0, ROOM_H + WALL_T / 2.0), Vector2(ROOM_W + WALL_T * 2, WALL_T))
 	_make_wall(Vector2(-WALL_T / 2.0, ROOM_H / 2.0),         Vector2(WALL_T, ROOM_H))
 	_make_wall(Vector2(ROOM_W + WALL_T / 2.0, ROOM_H / 2.0), Vector2(WALL_T, ROOM_H))
 
+
 func _make_wall(pos: Vector2, size: Vector2) -> void:
-	var wall = StaticBody2D.new()
-	var shape = CollisionShape2D.new()
-	var rect = RectangleShape2D.new()
-	rect.size = size
+	var wall  := StaticBody2D.new()
+	var shape := CollisionShape2D.new()
+	var rect  := RectangleShape2D.new()
+	rect.size  = size
 	shape.shape = rect
 	wall.add_child(shape)
-	var vis = Polygon2D.new()
-	var hw := size.x / 2.0
-	var hh := size.y / 2.0
+	var vis := Polygon2D.new()
+	var hw  := size.x / 2.0
+	var hh  := size.y / 2.0
 	vis.polygon = PackedVector2Array([
 		Vector2(-hw, -hh), Vector2(hw, -hh),
-		Vector2(hw, hh),   Vector2(-hw, hh)
+		Vector2(hw,   hh), Vector2(-hw,  hh)
 	])
 	vis.color = Color(0.28, 0.28, 0.35)
 	wall.add_child(vis)

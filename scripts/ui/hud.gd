@@ -24,8 +24,12 @@ const CORE_COLORS = {
 @onready var you_died_overlay: ColorRect = $YouDiedOverlay
 @onready var you_died_title: Label = $YouDiedTitle
 @onready var you_died_prompt: Label = $YouDiedPrompt
+@onready var level_label: Label = $LevelLabel
 
 var _player_dead := false
+
+func _ready() -> void:
+	level_label.text = "LEVEL: %d" % (GameState.room_counter + 1)
 
 func update_health(current: int, maximum: int) -> void:
 	fill.size.x = BAR_MAX_WIDTH * (float(current) / float(maximum))
@@ -51,8 +55,10 @@ func _unhandled_input(event: InputEvent) -> void:
 	if not _player_dead:
 		return
 	if event is InputEventKey and event.pressed and event.keycode == KEY_R:
-		GameState.player_health = 100
-		GameState.player_cores = [0, 0, 0]
+		GameState.player_health  = 100
+		GameState.player_cores   = [0, 0, 0]
+		GameState.player_perks   = []
 		GameState.exit_direction = ""
-		GameState.room_counter = 0
-		get_tree().change_scene_to_file("res://scenes/Main.tscn")
+		GameState.room_counter   = 0
+		GameState.hardcore_mode  = false
+		get_tree().change_scene_to_file("res://scenes/ui/HomeScreen.tscn")

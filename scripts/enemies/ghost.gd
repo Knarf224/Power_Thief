@@ -13,6 +13,16 @@ func _ready() -> void:
 	health = 30
 	drop_core_type = 4  # PHASE
 
+func _physics_process(delta: float) -> void:
+	if player == null or not is_instance_valid(player):
+		return
+	_ai_update(delta)
+	_tick_effects(delta)
+	if is_queued_for_deletion():
+		return
+	# Translate directly — bypasses move_and_slide() so walls are ignored
+	global_position += velocity * _speed_multiplier() * delta
+
 func _ai_update(delta: float) -> void:
 	velocity = _dir_to_player() * GHOST_SPEED
 	_contact_cooldown = max(0.0, _contact_cooldown - delta)

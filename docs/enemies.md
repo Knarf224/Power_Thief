@@ -385,6 +385,32 @@ Use this file to track and balance all entity stats. Update it whenever values c
 
 ---
 
+---
+
+## Bosses
+
+> Full boss stats and perk drop pools are in `docs/boss.md`. Summary below.
+
+| Boss | HP | Key Mechanic | Companion | Perk Pool |
+|---|---|---|---|---|
+| The Warden | 350 | 2-hit iron shield; charges walls, stunned on impact | Stone Golem | Stopping Power, Gravity Push, Thorns |
+| The Lich | 220 | Invulnerable while spirits alive; summons 3 (or 5) per wave | Necromancer | Rapid Fire, Piercing Shot, Auto-Fire |
+| The Phantom | 180 | Only vulnerable 1.5s after teleport; spawns 2-3 decoys | Ghost | Piercing Shot, Auto-Fire, Life Steal |
+| The Plague Lord | 400 | Persistent poison floor pools; slowest boss | Poison Toad | Life Steal, Thorns, Death Burst |
+| The Storm Tyrant | 280 | Homing bolts + storm aura + chain bolt special | Lightning Sprite | Rapid Fire, Gravity Push, Death Burst |
+
+**Boss-specific sub-entities:**
+
+| Entity | HP | Behavior |
+|---|---|---|
+| Lich Spirit | 10 | Rushes player (120 spd), 15 contact dmg; blocks Lich invulnerability while alive |
+| Phantom Decoy | 1 | Looks identical to Phantom; dies in 1 hit, 18 contact dmg |
+| Plague Lord Projectile | — | Travels to target then spawns PoisonPool on landing |
+| Poison Pool | — | Area2D, 60px radius, 4 dmg/0.5s tick, persists 8s (12s phase 2) |
+| Storm Bolt | — | Homing bolt, 300 spd, turns 90°/s; chain variant jumps to 3 enemies (15 dmg each) |
+
+---
+
 ## Notes for Balancing
 - Player has **10x** the HP of a Fire Mage — currently very tanky relative to enemies
 - Assassin deals the most burst damage through its dash + contact combo

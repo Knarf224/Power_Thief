@@ -45,7 +45,9 @@ const ENEMY_POOL = [
 	"res://scenes/enemies/Necromancer.tscn",
 ]
 
-const SPAWN_COUNT = 3  # Enemies per room
+# Total enemy count is taken from the global scale (base 8 ≈ 2 per room at room 1)
+# and divided evenly across the 4 corner rooms. Computed once in _ready().
+var _enemies_per_room: int = 2
 
 var _state := RoomState.IDLE
 var _triggered: Dictionary = {}
@@ -55,6 +57,7 @@ var _triggers_armed := false
 var _arm_timer := 0.0
 const ARM_DELAY = 0.3
 var _cores_activated := false  # Ensures one full frame passes before checking for empty cores
+var _blackout: Node
 
 @onready var player: CharacterBody2D = $Player
 @onready var hud = $HUD
@@ -78,6 +81,15 @@ func _ready() -> void:
 		"north": player.position = Vector2(960,  980)
 		"south": player.position = Vector2(960,  100)
 		_:       player.position = Vector2(960,  900)
+	var total := GameState.get_boss_companion_count() if GameState.is_boss_level() else GameState.get_enemy_count(2)
+	_enemies_per_room = maxi(1, total / 4)
+
+	if GameState.is_boss_level():
+		_spawn_boss()
+
+	_blackout = load("res://scripts/dungeon/blackout_overlay.gd").new()
+	_blackout.activation_chance = 0.90
+	add_child(_blackout)
 
 func _process(delta: float) -> void:
 	if not _triggers_armed:
@@ -88,9 +100,16 @@ func _process(delta: float) -> void:
 	match _state:
 		RoomState.FIGHTING:
 			if _any_triggered and get_tree().get_nodes_in_group("enemy").is_empty():
-				_state = RoomState.CORES_ACTIVE
+				if GameState.boss_defeated_this_level:
+					_blackout.deactivate()
+					_open_exits()
+					GameState.open_pending_perk_select()
+					_state = RoomState.TRANSITION_READY
+				else:
+					_state = RoomState.CORES_ACTIVE
 		RoomState.CORES_ACTIVE:
 			if not _cores_activated:
+				_blackout.deactivate()
 				_activate_cores()
 				_cores_activated = true
 			elif get_tree().get_nodes_in_group("core_pickup").is_empty():
@@ -138,12 +157,18 @@ func _trigger_room(room_name: String) -> void:
 	_state = RoomState.FIGHTING
 	_spawn_in_room(room_name)
 
+func _spawn_boss() -> void:
+	var boss = load(GameState.get_boss_scene()).instantiate()
+	add_child(boss)
+	# Boss spawns in the center corridor where the player starts
+	boss.global_position = Vector2(ROOM_W / 2.0, ROOM_H / 2.0)
+
 func _spawn_in_room(room_name: String) -> void:
 	var rect: Rect2 = ROOMS[room_name]
 	var pool := ENEMY_POOL.duplicate()
 	pool.shuffle()
 	var padding := 60.0
-	for i in SPAWN_COUNT:
+	for i in _enemies_per_room:
 		var enemy = load(pool[i % pool.size()]).instantiate()
 		add_child(enemy)
 		enemy.teleport_when_stuck = true

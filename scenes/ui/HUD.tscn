@@ -21,9 +21,9 @@ color = Color(0.2, 0.78, 0.2, 1)
 
 [node name="CoresLabel" type="Label" parent="."]
 offset_left = 8.0
-offset_top = 992.0
+offset_top = 967.0
 offset_right = 150.0
-offset_bottom = 1012.0
+offset_bottom = 987.0
 text = "CORES"
 
 [node name="SlotBG1" type="ColorRect" parent="."]
@@ -101,6 +101,16 @@ offset_bottom = 560.0
 theme_override_font_sizes/font_size = 22
 horizontal_alignment = 1
 text = "Room cleared — walk in any direction"
+
+[node name="LevelLabel" type="Label" parent="."]
+offset_left = 1700.0
+offset_top = 10.0
+offset_right = 1910.0
+offset_bottom = 38.0
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(0.78, 0.74, 0.95, 1)
+horizontal_alignment = 2
+text = "LEVEL: 1"
 
 [node name="YouDiedOverlay" type="ColorRect" parent="."]
 visible = false

@@ -66,26 +66,44 @@
 - [x] "Walk in any direction" prompt shown to player
 - [x] Player walks off screen → enters new room from opposite edge with fresh enemies
 - [x] `GameState` autoload — persists health, cores, exit direction, room counter across scene changes
-- [x] Deterministic room rotation — Ambush Room always appears as 2nd room, then every 3rd after
+- [x] Deterministic room rotation — weighted roll system with streak protection and same-room-twice prevention
+- [x] **Room selection algorithm** — rooms 1-3 always Standard, room 4 always forced special, room 5+ weighted roll
 - [x] **Ambush Room** — 1920x1080 cross-corridor layout with 4 enclosed corner rooms
   - [x] Trigger zones per corner + center trigger (crossing center spawns all rooms at once)
   - [x] 0.3s arm delay prevents immediate trigger on scene load
   - [x] Ghost / Assassin / BombBeetle weighted 3x in enemy pool
-  - [x] 3 enemies per triggered room (max 12 total)
   - [x] Corner teleport zones — enemies stuck in inner corners for 1s teleport to room center (960, 540)
   - [x] Teleport zones marked with dark red-purple floor tiles
   - [x] Core pickup race condition fixed — one-frame delay before checking for empty core group
-- [ ] Additional room types (Gauntlet, Elite, Siege, Maze)
-- [ ] Boss room
+- [x] **Hazard Floor Room** — 1536x864 with 16×9 tile grid; tiles cycle SAFE→WARNING→DANGER→COOLDOWN
+  - [x] 8 DPS while standing on DANGER tile; hazard stops on room clear
+  - [x] Difficulty scales: more tiles per wave and shorter warning window as room_counter increases
+- [x] **Power Zone Room** — 1280x1280 split into 4 triangular zones by room diagonals
+  - [x] Player can only fire basic attack while standing in the active (lit) zone
+  - [x] Wave-based enemy spawning — waves do not wait for previous wave to clear
+  - [x] Active zone switches on timer with warning flash; never picks same zone twice in a row
+- [x] **Blackout Overlay** — optional darkness effect that applies to any room from level 4 onward
+  - [x] Scales from 50% activation chance at level 4 to 100% at level 14+
+  - [x] Shrinking light radius around player; alternates LIT / DARK phases
+- [x] **Boss system** — bosses appear every 4th level overlaid on any room type
+  - [x] 5 bosses cycle in order: Warden → Lich → Phantom → Plague Lord → Storm Tyrant
+  - [x] Boss companion count scales separately from normal enemy count (slower curve)
+  - [x] All 4 room types support boss spawning and companion count
+- [ ] Additional room types (Gauntlet, Siege)
 
 ---
 
 ## 5. Boss
-- [ ] Boss scene (larger enemy, more health)
-- [ ] Phase 1: Basic elemental attacks
-- [ ] Phase 2: Steals one of the player's cores temporarily
-- [ ] Drops a core on death
-- [ ] Win condition triggers when boss dies
+- [x] **boss_base.gd** — shared base; floating health bar via `_draw()`, `_is_dying` double-death guard, perk drop staging
+- [x] **The Warden** — 350 HP, 2-hit iron shield, charges into walls, stunned after wall hit (damage window)
+- [x] **The Lich** — 220 HP, invulnerable while spirits alive, summons 3/5 spirits; phases at 40% HP
+- [x] **The Phantom** — 180 HP, teleports every 3.5s/2.0s, only vulnerable 1.5s post-teleport, spawns decoys
+- [x] **The Plague Lord** — 400 HP, fires poison globs that leave persistent floor pools, phases at 50% HP
+- [x] **The Storm Tyrant** — 280 HP, orbits player, homing bolts, storm aura, chain bolt special every 6s
+- [x] **Perk select UI** — appears after ALL enemies cleared (not just boss); no cores drop on boss levels
+- [x] **8 perks defined** — Auto-Fire, Stopping Power, Gravity Push, Life Steal, Piercing Shot, Rapid Fire, Thorns, Death Burst
+- [ ] Perk gameplay effects not yet implemented — names display only
+- [ ] Win condition / end screen
 
 ---
 
@@ -93,7 +111,11 @@
 - [x] Health bar — top left, green fill over red background, shrinks as damage is taken
 - [x] Core slot display — bottom left, 3 star-shaped slots that light up with core color when equipped
 - [x] Key indicators — 1 / 2 / 3 shown inside each slot box so player knows how to activate cores
-- [x] **YOU DIED screen** — dark overlay + large red "YOU DIED" text + "Press R to restart" prompt; R key fully resets GameState and returns to room 1
+- [x] **CORES label** — sits above the slot display; moved up to prevent overlap with slot boxes
+- [x] **Level label** — top right, shows current level number (`LEVEL: N`)
+- [x] **YOU DIED screen** — dark overlay + large red "YOU DIED" text + "Press R to restart" prompt; R key fully resets GameState (health, cores, perks, room counter) and returns to Home Screen
+- [x] **Home Screen** — title + play button; resets GameState on new game start
+- [x] **Perk Select screen** — fullscreen overlay on boss death; shows 2 perks, grays out already-owned ones, unpauses and frees self on pick
 - [ ] Core pickup prompt ("Press E to take / swap")
 - [ ] Win screen
 
@@ -145,22 +167,30 @@ new-game-project/
 │   │                 # Projectiles: EnemyProjectile.tscn, FireMageProjectile.tscn,
 │   │                 # IceProjectile.tscn, LightningProjectile.tscn,
 │   │                 # NecromancerProjectile.tscn, PoisonToadProjectile.tscn
+│   │   └── bosses/   # Warden.tscn, Lich.tscn, Phantom.tscn, PlagueLord.tscn, StormTyrant.tscn
+│   │                 # LichSpirit.tscn, PhantomDecoy.tscn
+│   │                 # LichProjectile.tscn, PhantomProjectile.tscn
+│   │                 # PlagueLordProjectile.tscn, PoisonPool.tscn, StormBolt.tscn
 │   ├── core_system/  # CorePickup.tscn
-│   ├── dungeon/      # AmbushRoom.tscn
-│   ├── ui/           # HUD.tscn
-│   └── boss/         # (empty — next milestone)
+│   ├── dungeon/      # AmbushRoom.tscn, HazardFloorRoom.tscn, PowerZoneRoom.tscn, BlackoutRoom.tscn
+│   └── ui/           # HUD.tscn, HomeScreen.tscn, PerkSelect.tscn
 ├── scripts/
-│   ├── autoload/     # game_state.gd  ← persists player state across scene changes
+│   ├── autoload/     # game_state.gd  ← persists all run state across scene changes
 │   ├── player/       # player.gd, projectile.gd, fire_bomb.gd, dash_explosion.gd, summoned_ally.gd
 │   ├── enemies/      # base_enemy.gd, fire_mage.gd, assassin.gd, slime.gd, ghost.gd,
 │   │                 # bomb_beetle.gd, ice_witch.gd, lightning_sprite.gd, stone_golem.gd,
 │   │                 # necromancer.gd, summoned_spirit.gd, poison_toad.gd, enemy_projectile.gd
+│   │   └── bosses/   # boss_base.gd, warden.gd, lich.gd, phantom.gd, plague_lord.gd, storm_tyrant.gd
+│   │                 # lich_spirit.gd, phantom_decoy.gd
+│   │                 # plague_lord_projectile.gd, poison_pool.gd, storm_bolt.gd
 │   ├── core_system/  # core_pickup.gd
-│   ├── dungeon/      # main.gd (Standard Combat Room), ambush_room.gd (Ambush Room)
-│   └── ui/           # hud.gd
+│   ├── dungeon/      # main.gd, ambush_room.gd, hazard_floor_room.gd, power_zone_room.gd
+│   │                 # blackout_overlay.gd
+│   └── ui/           # hud.gd, home_screen.gd, perk_select.gd
+├── docs/             # boss.md, enemies.md, rooms.md, staging.md, TASK.md
 ├── resources/
 │   └── power_cores/  # (placeholder)
 └── assets/
-    ├── enemies/      # fire_mage.png, frost_mage.png  ← 16x16 Aseprite pixel art sprites
+    ├── enemies/      # (placeholder)
     └── audio/        # (placeholder)
 ```

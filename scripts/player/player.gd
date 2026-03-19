@@ -29,6 +29,7 @@ var _summon_cooldown := 0.0
 var _dash_start_pos := Vector2.ZERO
 
 var core_slots: Array = [CoreType.NONE, CoreType.NONE, CoreType.NONE]
+var can_attack := true  # rooms can gate this (e.g. PowerZoneRoom)
 
 signal health_changed(current: int, maximum: int)
 signal died
@@ -109,7 +110,7 @@ func _unhandled_input(event: InputEvent) -> void:
 # --- Shooting ---
 
 func _shoot() -> void:
-	if projectile_scene == null:
+	if projectile_scene == null or not can_attack:
 		return
 	var base_dir := (get_global_mouse_position() - global_position).normalized()
 	if _has_core(CoreType.SPLIT):
