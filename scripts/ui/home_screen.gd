@@ -12,6 +12,7 @@ var _hardcore_btn: Button
 var _settings_panel: Control
 var _dev_start_level := 1
 var _dev_level_label: Label
+var _god_mode_btn: Button
 
 
 func _ready() -> void:
@@ -74,8 +75,9 @@ func _ready() -> void:
 	_refresh_hardcore_btn()
 	vbox.add_child(_hardcore_btn)
 
-	# DEV — Start at Level picker
+	# DEV — Start at Level picker + God Mode toggle
 	vbox.add_child(_build_dev_level_row())
+	vbox.add_child(_build_god_mode_row())
 
 	# Settings overlay (hidden until Settings is pressed)
 	_settings_panel = _build_settings_panel()
@@ -157,6 +159,28 @@ func _build_dev_level_row() -> Control:
 	row.add_child(plus_btn)
 
 	return row
+
+
+func _build_god_mode_row() -> Control:
+	_god_mode_btn = _make_button(_god_mode_label(), BTN_NORMAL, BTN_HOVER)
+	_refresh_god_mode_btn()
+	_god_mode_btn.pressed.connect(func():
+		GameState.god_mode = not GameState.god_mode
+		_refresh_god_mode_btn()
+	)
+	return _god_mode_btn
+
+func _god_mode_label() -> String:
+	return "[DEV] GOD MODE:  ON" if GameState.god_mode else "[DEV] GOD MODE:  OFF"
+
+func _refresh_god_mode_btn() -> void:
+	_god_mode_btn.text = _god_mode_label()
+	if GameState.god_mode:
+		_apply_btn_style(_god_mode_btn, Color(0.05, 0.25, 0.08), Color(0.08, 0.38, 0.12))
+		_god_mode_btn.add_theme_color_override("font_color", Color(0.60, 1.0, 0.65))
+	else:
+		_apply_btn_style(_god_mode_btn, BTN_NORMAL, BTN_HOVER)
+		_god_mode_btn.add_theme_color_override("font_color", Color(0.55, 0.80, 0.55))
 
 
 # --- Settings panel ---

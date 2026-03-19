@@ -198,6 +198,7 @@ func _open_perk_select() -> void:
 
 var staging_mode := false
 var staging_room  := "res://scenes/dungeon/HazardFloorRoom.tscn"
+var god_mode     := false
 
 # ---------------------------------------------------------------------------
 # QUICK MODE — set to true to test the room ORDER algorithm.
@@ -205,7 +206,7 @@ var staging_room  := "res://scenes/dungeon/HazardFloorRoom.tscn"
 # the full weighted selection — you will see the actual rotation play out.
 # Use F5 (full game) so the room sequence starts from the beginning.
 # ---------------------------------------------------------------------------
-var quick_mode := false
+var quick_mode := true
 
 func get_enemy_count(default_count: int) -> int:
 	if staging_mode or quick_mode:

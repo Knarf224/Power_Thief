@@ -266,7 +266,8 @@ func take_damage(amount: int, source: Node = null) -> void:
 		_iron_will_available = false
 		health_changed.emit(health, MAX_HEALTH)
 		return
-	health = max(0, health - amount)
+	var min_health := 1 if GameState.god_mode else 0
+	health = max(min_health, health - amount)
 	health_changed.emit(health, MAX_HEALTH)
 	# Thorns: reflect 50% of contact damage back to the attacker
 	if source != null and is_instance_valid(source) and source.has_method("take_damage") and _has_perk("thorns"):
