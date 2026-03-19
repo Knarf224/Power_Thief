@@ -22,6 +22,7 @@ func _physics_process(delta: float) -> void:
 		return
 	# Translate directly — bypasses move_and_slide() so walls are ignored
 	global_position += velocity * _speed_multiplier() * delta
+	_enforce_bounds()
 
 func _ai_update(delta: float) -> void:
 	velocity = _dir_to_player() * GHOST_SPEED

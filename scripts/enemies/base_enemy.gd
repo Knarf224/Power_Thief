@@ -39,6 +39,7 @@ func _physics_process(delta: float) -> void:
 	velocity *= _speed_multiplier()
 
 	move_and_slide()
+	_enforce_bounds()
 
 	# If stuck in a designated corner zone, teleport to the room center (ambush room only)
 	if teleport_when_stuck and _in_teleport_zone():
@@ -133,6 +134,14 @@ func _in_teleport_zone() -> bool:
 		if zone.has_point(global_position):
 			return true
 	return false
+
+func _enforce_bounds() -> void:
+	var vp := get_viewport_rect()
+	const MARGIN := 80.0
+	if global_position.x < -MARGIN or global_position.x > vp.size.x + MARGIN \
+			or global_position.y < -MARGIN or global_position.y > vp.size.y + MARGIN:
+		global_position = vp.size / 2.0
+		velocity = Vector2.ZERO
 
 func _dir_to_player() -> Vector2:
 	return (player.global_position - global_position).normalized()
