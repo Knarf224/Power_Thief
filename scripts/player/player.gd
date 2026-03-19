@@ -43,7 +43,7 @@ signal cores_changed(slots: Array)
 @export var dash_explosion_scene: PackedScene
 @export var summon_ally_scene: PackedScene
 
-@onready var _visual: Polygon2D = $Visual
+@onready var _visual: Sprite2D = $Visual
 
 func _ready() -> void:
 	add_to_group("player")
