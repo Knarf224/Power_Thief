@@ -61,4 +61,5 @@ func _unhandled_input(event: InputEvent) -> void:
 		GameState.exit_direction = ""
 		GameState.room_counter   = 0
 		GameState.hardcore_mode  = false
+		GameState.reset_boss_pool()
 		get_tree().change_scene_to_file("res://scenes/ui/HomeScreen.tscn")

@@ -40,13 +40,13 @@ func _on_body_entered(body: Node2D) -> void:
 	else:
 		queue_free()  # wall hit
 
-func _do_chain(hit_body: Node) -> void:
+func _do_chain(hit_body: Node2D) -> void:
 	var hits := 0
-	for enemy in get_tree().get_nodes_in_group("enemy"):
+	for enemy: Node2D in get_tree().get_nodes_in_group("enemy"):
 		if hits >= chain_count:
 			break
 		if enemy == hit_body or not is_instance_valid(enemy):
 			continue
 		if hit_body.global_position.distance_to(enemy.global_position) <= chain_range:
-			enemy.take_damage(chain_damage)
+			enemy.call("take_damage", chain_damage)
 			hits += 1

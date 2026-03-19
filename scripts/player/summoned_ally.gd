@@ -16,24 +16,24 @@ func _process(delta: float) -> void:
 		return
 
 	_attack_cooldown = max(0.0, _attack_cooldown - delta)
-	var target = _find_nearest_enemy()
+	var target: Node2D = _find_nearest_enemy()
 	if target == null:
 		return
 
-	var dir = (target.global_position - global_position).normalized()
+	var dir: Vector2 = (target.global_position - global_position).normalized()
 	global_position += dir * ALLY_SPEED * delta
 
 	if global_position.distance_to(target.global_position) <= ATTACK_RANGE and _attack_cooldown <= 0.0:
-		target.take_damage(ATTACK_DAMAGE)
+		target.call("take_damage", ATTACK_DAMAGE)
 		_attack_cooldown = ATTACK_RATE
 
-func _find_nearest_enemy() -> Node:
-	var nearest: Node = null
+func _find_nearest_enemy() -> Node2D:
+	var nearest: Node2D = null
 	var nearest_dist := INF
-	for enemy in get_tree().get_nodes_in_group("enemy"):
+	for enemy: Node2D in get_tree().get_nodes_in_group("enemy"):
 		if not is_instance_valid(enemy):
 			continue
-		var d = global_position.distance_to(enemy.global_position)
+		var d: float = global_position.distance_to(enemy.global_position)
 		if d < nearest_dist:
 			nearest_dist = d
 			nearest = enemy

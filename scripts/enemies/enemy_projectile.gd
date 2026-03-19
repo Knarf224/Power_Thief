@@ -16,11 +16,11 @@ func _process(delta: float) -> void:
 	if _timer >= LIFETIME:
 		queue_free()
 
-func _on_body_entered(body: Node) -> void:
+func _on_body_entered(body: Node2D) -> void:
 	if body.is_in_group("enemy"):
 		return
 	if body.is_in_group("player"):
-		body.take_damage(damage)
+		body.call("take_damage", damage)
 		queue_free()
 	elif body is StaticBody2D:
 		queue_free()

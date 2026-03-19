@@ -21,7 +21,7 @@ func _process(delta: float) -> void:
 
 func _explode() -> void:
 	_exploded = true
-	for enemy in get_tree().get_nodes_in_group("enemy"):
+	for enemy: Node2D in get_tree().get_nodes_in_group("enemy"):
 		if global_position.distance_to(enemy.global_position) <= EXPLOSION_RADIUS:
-			enemy.take_damage(DAMAGE)
+			enemy.call("take_damage", DAMAGE)
 	queue_free()

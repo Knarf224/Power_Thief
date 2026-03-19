@@ -182,6 +182,7 @@ func _on_start_pressed() -> void:
 	GameState.player_perks   = []
 	GameState.exit_direction = ""
 	GameState.room_counter   = 0
+	GameState.reset_boss_pool()
 	get_tree().change_scene_to_file("res://scenes/Main.tscn")
 
 

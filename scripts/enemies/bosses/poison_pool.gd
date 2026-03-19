@@ -24,6 +24,6 @@ func _process(delta: float) -> void:
 	_tick_timer -= delta
 	if _tick_timer <= 0.0:
 		_tick_timer = TICK_RATE
-		for body in get_overlapping_bodies():
+		for body: Node2D in get_overlapping_bodies():
 			if body.is_in_group("player"):
-				body.take_damage(DAMAGE_PER_TICK)
+				body.call("take_damage", DAMAGE_PER_TICK)

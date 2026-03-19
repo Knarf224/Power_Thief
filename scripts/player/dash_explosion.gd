@@ -8,9 +8,9 @@ const FLASH_TIME = 0.15
 var _timer := 0.0
 
 func _ready() -> void:
-	for enemy in get_tree().get_nodes_in_group("enemy"):
+	for enemy: Node2D in get_tree().get_nodes_in_group("enemy"):
 		if global_position.distance_to(enemy.global_position) <= EXPLOSION_RADIUS:
-			enemy.take_damage(EXPLOSION_DAMAGE)
+			enemy.call("take_damage", EXPLOSION_DAMAGE)
 
 func _process(delta: float) -> void:
 	_timer += delta

@@ -21,11 +21,11 @@ func _process(delta: float) -> void:
 	if _timer >= LIFETIME:
 		_land()
 
-func _on_body_entered(body: Node) -> void:
+func _on_body_entered(body: Node2D) -> void:
 	if body.is_in_group("enemy") or body.is_in_group("boss"):
 		return
 	if body.is_in_group("player"):
-		body.take_damage(damage)
+		body.call("take_damage", damage)
 	_land()
 
 func _land() -> void:

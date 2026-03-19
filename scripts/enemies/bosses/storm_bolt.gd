@@ -16,16 +16,16 @@ var chain_damage := 15
 var chain_jumps  := 3
 
 var _timer  := 0.0
-var _player : Node = null
+var _player : Node2D = null
 
 func _ready() -> void:
 	body_entered.connect(_on_body_entered)
-	_player = get_tree().get_first_node_in_group("player")
+	_player = get_tree().get_first_node_in_group("player") as Node2D
 
 func _process(delta: float) -> void:
 	# Home toward player
 	if _player != null and is_instance_valid(_player):
-		var target_dir := (_player.global_position - global_position).normalized()
+		var target_dir: Vector2 = (_player.global_position - global_position).normalized()
 		var turn_amount := clampf(
 			direction.angle_to(target_dir),
 			-TURN_RATE * delta,
@@ -38,24 +38,24 @@ func _process(delta: float) -> void:
 	if _timer >= LIFETIME:
 		queue_free()
 
-func _on_body_entered(body: Node) -> void:
+func _on_body_entered(body: Node2D) -> void:
 	if body.is_in_group("enemy") or body.is_in_group("boss"):
 		return
 	if body.is_in_group("player"):
 		if is_chain:
-			body.take_damage(chain_damage)
+			body.call("take_damage", chain_damage)
 			_do_chain()
 		else:
-			body.take_damage(damage)
+			body.call("take_damage", damage)
 	queue_free()
 
 func _do_chain() -> void:
 	var remaining := chain_jumps
-	for enemy in get_tree().get_nodes_in_group("enemy"):
+	for enemy: Node2D in get_tree().get_nodes_in_group("enemy"):
 		if remaining <= 0:
 			break
 		if not is_instance_valid(enemy):
 			continue
 		if global_position.distance_to(enemy.global_position) <= 200.0:
-			enemy.take_damage(chain_damage)
+			enemy.call("take_damage", chain_damage)
 			remaining -= 1
