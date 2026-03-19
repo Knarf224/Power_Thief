@@ -112,6 +112,17 @@ theme_override_colors/font_color = Color(0.78, 0.74, 0.95, 1)
 horizontal_alignment = 2
 text = "LEVEL: 1"
 
+[node name="PerksLabel" type="Label" parent="."]
+offset_left = 1700.0
+offset_top = 46.0
+offset_right = 1910.0
+offset_bottom = 700.0
+theme_override_font_sizes/font_size = 15
+theme_override_colors/font_color = Color(0.78, 0.74, 0.95, 0.85)
+horizontal_alignment = 2
+vertical_alignment = 0
+text = ""
+
 [node name="YouDiedOverlay" type="ColorRect" parent="."]
 visible = false
 offset_right = 1920.0

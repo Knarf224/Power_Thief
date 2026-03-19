@@ -1,5 +1,7 @@
 extends Node
 
+signal perks_changed
+
 # Persists player state across room scene transitions
 var player_health: int = 100
 var player_cores: Array = [0, 0, 0]  # CoreType.NONE = 0

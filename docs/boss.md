@@ -190,16 +190,19 @@ Perks are permanent buffs granted by defeating a boss. They persist across all l
 
 ### Perk Pool
 
-| # | Name            | Effect                                                                              | Type    |
-|---|-----------------|-------------------------------------------------------------------------------------|---------|
-| 1 | Auto-Fire       | Holding the fire button fires continuously at the player's fire rate                | Passive |
-| 2 | Stopping Power  | Player shots slow enemies by 30% for 1.0s on hit (stacks with Ice Core)             | Passive |
-| 3 | Gravity Push    | Dashing repels all enemies within 120px away from the player                        | Passive |
-| 4 | Life Steal      | Killing an enemy restores 2 HP (capped at max health)                               | Passive |
-| 5 | Piercing Shot   | Player shots pass through enemies, hitting every target in their path               | Passive |
-| 6 | Rapid Fire      | Player fire rate increased by 40% (shoot cooldown × 0.6)                            | Passive |
-| 7 | Thorns          | When the player takes contact damage, the attacker receives 50% of the damage back  | Passive |
-| 8 | Death Burst     | Enemies explode on death dealing 20 AoE damage in a 60px radius                    | Passive |
+| # | Symbol | Name            | Effect                                                                              | Type    |
+|---|--------|-----------------|-------------------------------------------------------------------------------------|---------|
+| 1 | `∞`    | Auto-Fire       | Holding the fire button fires continuously at the player's fire rate                | Passive |
+| 2 | `≫`    | Rapid Fire      | Player fire rate increased by 40% (shoot cooldown × 0.6)                            | Passive |
+| 3 | `✦`    | Stopping Power  | Player shots deal +30% damage                                                       | Passive |
+| 4 | `⇒`    | Piercing Shot   | Player shots pass through enemies, hitting every target in their path               | Passive |
+| 5 | `※`    | Thorns          | When the player takes contact damage, the attacker receives 50% of the damage back  | Passive |
+| 6 | `♥`    | Life Steal      | Killing an enemy restores 2 HP (capped at max health)                               | Passive |
+| 7 | `✸`    | Death Burst     | Enemies explode on death dealing 20 AoE damage in a 60px radius                    | Passive |
+| 8 | `⚡`   | Berserker       | Below 30 HP: move speed ×1.5 and fire rate ×2                                      | Passive |
+| 9 | `◆`    | Iron Will       | Once per room, survive a killing blow at 1 HP instead of dying                      | Passive |
+|10 | `⊙`    | Overclock       | Active core cooldowns (Fire Bomb, Phase, Summon) reduced by 30%                     | Passive |
+|11 | `⊕`    | Gravity Push    | Dashing repels all enemies within 120px away from the player                        | Passive |
 
 ---
 

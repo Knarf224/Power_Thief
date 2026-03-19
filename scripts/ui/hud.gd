@@ -2,6 +2,34 @@ extends CanvasLayer
 
 const BAR_MAX_WIDTH = 200.0
 
+const PERK_SYMBOLS: Dictionary = {
+	"auto_fire":      "∞",
+	"rapid_fire":     "≫",
+	"stopping_power": "✦",
+	"piercing_shot":  "⇒",
+	"thorns":         "※",
+	"life_steal":     "♥",
+	"death_burst":    "✸",
+	"berserker":      "⚡",
+	"iron_will":      "◆",
+	"overclock":      "⊙",
+	"gravity_push":   "⊕",
+}
+
+const PERK_NAMES: Dictionary = {
+	"auto_fire":      "Auto-Fire",
+	"stopping_power": "Stopping Power",
+	"gravity_push":   "Gravity Push",
+	"life_steal":     "Life Steal",
+	"piercing_shot":  "Piercing Shot",
+	"rapid_fire":     "Rapid Fire",
+	"thorns":         "Thorns",
+	"death_burst":    "Death Burst",
+	"berserker":      "Berserker",
+	"iron_will":      "Iron Will",
+	"overclock":      "Overclock",
+}
+
 const CORE_COLORS = {
 	0: Color(0.2, 0.2, 0.2, 1),    # empty
 	1: Color(0.5, 0.3, 0.9, 1),    # DASH      - purple
@@ -25,11 +53,22 @@ const CORE_COLORS = {
 @onready var you_died_title: Label = $YouDiedTitle
 @onready var you_died_prompt: Label = $YouDiedPrompt
 @onready var level_label: Label = $LevelLabel
+@onready var perks_label: Label = $PerksLabel
 
 var _player_dead := false
 
 func _ready() -> void:
 	level_label.text = "LEVEL: %d" % (GameState.room_counter + 1)
+	GameState.perks_changed.connect(_refresh_perks)
+	_refresh_perks()
+
+func _refresh_perks() -> void:
+	var lines: PackedStringArray = []
+	for perk_id: String in GameState.player_perks:
+		var sym: String = PERK_SYMBOLS[perk_id] if PERK_SYMBOLS.has(perk_id) else "?"
+		var name: String = PERK_NAMES[perk_id] if PERK_NAMES.has(perk_id) else perk_id
+		lines.append(sym + "  " + name)
+	perks_label.text = "\n".join(lines)
 
 func update_health(current: int, maximum: int) -> void:
 	fill.size.x = BAR_MAX_WIDTH * (float(current) / float(maximum))
