@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bej548v0msh3o"
-path="res://.godot/imported/frost_mage.png-ec95f9ff14a7aba4ded22f9107d0142c.ctex"
+uid="uid://dyleeq44sak5v"
+path="res://.godot/imported/bug_sheet.png-4d8d69c1a22461eec722620e127d4a75.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/enemies/frost_mage.png"
-dest_files=["res://.godot/imported/frost_mage.png-ec95f9ff14a7aba4ded22f9107d0142c.ctex"]
+source_file="res://assets/enemies/bug_sheet.png"
+dest_files=["res://.godot/imported/bug_sheet.png-4d8d69c1a22461eec722620e127d4a75.ctex"]
 
 [params]
 

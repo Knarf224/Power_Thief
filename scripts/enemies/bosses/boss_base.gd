@@ -9,12 +9,13 @@ const BAR_Y      := -58.0   # above the boss sprite
 var boss_name      := "Boss"
 var boss_perk_pool : Array  = []   # list of perk ID strings, e.g. ["rapid_fire", "thorns"]
 var companion_scene: String = ""   # path to companion enemy scene
-# _is_dying is inherited from base_enemy — do not redeclare here
+# _is_dying and is_boss are inherited from base_enemy — do not redeclare here
 
 func _ready() -> void:
+	is_boss = true        # override base_enemy's is_boss = false
+	drop_core_type = 0    # bosses never drop cores
 	super()
 	add_to_group("boss")
-	drop_core_type = 0   # bosses never drop cores
 
 func _process(_delta: float) -> void:
 	queue_redraw()   # redraw health bar every frame

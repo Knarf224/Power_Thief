@@ -70,9 +70,12 @@ func _ready() -> void:
 	_spawn_enemies()
 	player.health_changed.connect(hud.update_health)
 	player.cores_changed.connect(hud.update_cores)
+	player.stamina_changed.connect(hud.update_stamina)
 	player.died.connect(_on_player_died)
 	hud.update_health(player.health, player.MAX_HEALTH)
 	hud.update_cores(player.core_slots)
+	hud.update_stamina(player.stamina, player.MAX_STAMINA)
+	MusicManager.on_room_entered(GameState.room_counter)
 
 	# Scale difficulty: more tiles enter WARNING and faster as rooms_cleared increases
 	var rooms := GameState.room_counter
@@ -101,7 +104,7 @@ func _process(delta: float) -> void:
 			if _enemies_spawned and get_tree().get_nodes_in_group("enemy").is_empty():
 				_blackout.deactivate()
 				_clear_all_tiles()  # floor hazard stops once room is cleared
-				if GameState.boss_defeated_this_level:
+				if GameState.boss_defeated_this_level and GameState.is_boss_level():
 					_open_exits()
 					GameState.open_pending_perk_select()
 					_state = RoomState.TRANSITION_READY

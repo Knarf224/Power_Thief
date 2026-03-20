@@ -18,7 +18,7 @@ const SHIELD_HITS     := 2       # absorbs this many hits before HP is touched
 
 var _state           := State.WALKING
 var _windup_timer    := 0.0
-var _stun_timer      := 0.0
+var _wall_stun_timer := 0.0
 var _charge_cooldown := 2.0   # initial delay so Warden walks toward player first
 var _contact_cd      := 0.0
 var _charge_dir      := Vector2.ZERO
@@ -55,8 +55,8 @@ func _ai_update(delta: float) -> void:
 		State.CHARGING:
 			# Wall detection — is_on_wall() reflects the previous frame's move_and_slide
 			if is_on_wall():
-				_state       = State.STUNNED
-				_stun_timer  = STUN_DURATION
+				_state           = State.STUNNED
+				_wall_stun_timer = STUN_DURATION
 				velocity     = Vector2.ZERO
 				return
 			velocity = _charge_dir * _charge_speed()
@@ -66,9 +66,9 @@ func _ai_update(delta: float) -> void:
 				_contact_cd = CONTACT_COOLDOWN
 
 		State.STUNNED:
-			velocity     = Vector2.ZERO
-			_stun_timer -= delta
-			if _stun_timer <= 0.0:
+			velocity         = Vector2.ZERO
+			_wall_stun_timer -= delta
+			if _wall_stun_timer <= 0.0:
 				_state           = State.WALKING
 				_charge_cooldown = _charge_cd()
 

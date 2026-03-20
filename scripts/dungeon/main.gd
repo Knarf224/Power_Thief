@@ -52,9 +52,12 @@ func _ready() -> void:
 
 	player.health_changed.connect(hud.update_health)
 	player.cores_changed.connect(hud.update_cores)
+	player.stamina_changed.connect(hud.update_stamina)
 	player.died.connect(_on_player_died)
 	hud.update_health(player.health, player.MAX_HEALTH)
 	hud.update_cores(player.core_slots)
+	hud.update_stamina(player.stamina, player.MAX_STAMINA)
+	MusicManager.on_room_entered(GameState.room_counter)
 
 	# Position player on the opposite side from where they exited last room
 	match GameState.exit_direction:
@@ -99,7 +102,7 @@ func _process(delta: float) -> void:
 		RoomState.FIGHTING:
 			if _enemies_spawned and get_tree().get_nodes_in_group("enemy").is_empty():
 				_blackout.deactivate()
-				if GameState.boss_defeated_this_level:
+				if GameState.boss_defeated_this_level and GameState.is_boss_level():
 					_open_exits()
 					GameState.open_pending_perk_select()
 					_state = RoomState.TRANSITION_READY

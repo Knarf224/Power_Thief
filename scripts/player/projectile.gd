@@ -16,6 +16,9 @@ var chain_range := 120.0
 var chain_damage := 8
 
 func _ready() -> void:
+	# Layer 2 is reserved for the Ghost enemy (intangible, bypasses walls).
+	# Add it to the scan mask so body_entered fires when a shot hits a Ghost.
+	set_collision_mask_value(2, true)
 	body_entered.connect(_on_body_entered)
 
 func _process(delta: float) -> void:

@@ -134,3 +134,6 @@ func _pick(perk_id: String) -> void:
 		GameState.perks_changed.emit()
 	get_tree().paused = false
 	queue_free()
+	if GameState.pending_win_screen:
+		GameState.pending_win_screen = false
+		GameState.open_win_screen()

@@ -85,9 +85,12 @@ func _ready() -> void:
 	_create_walls()
 	player.health_changed.connect(hud.update_health)
 	player.cores_changed.connect(hud.update_cores)
+	player.stamina_changed.connect(hud.update_stamina)
 	player.died.connect(_on_player_died)
 	hud.update_health(player.health, player.MAX_HEALTH)
 	hud.update_cores(player.core_slots)
+	hud.update_stamina(player.stamina, player.MAX_STAMINA)
+	MusicManager.on_room_entered(GameState.room_counter)
 
 	var rooms       := GameState.room_counter
 	_zone_duration   = maxf(ZONE_DURATION_MIN, ZONE_DURATION_BASE - rooms * 0.08)
@@ -141,7 +144,7 @@ func _process(delta: float) -> void:
 				player.can_attack = true
 				_active_zone = -1
 				_blackout.deactivate()
-				if GameState.boss_defeated_this_level:
+				if GameState.boss_defeated_this_level and GameState.is_boss_level():
 					_open_exits()
 					GameState.open_pending_perk_select()
 					_state = RoomState.TRANSITION_READY

@@ -12,6 +12,9 @@ var _slow_amount := 0.0
 var _poison_timer := 0.0
 var _poison_tick_timer := 0.0
 var _poison_damage := 0
+var _stun_timer := 0.0
+var _stun_flash_timer := 0.0
+const STUN_FLASH_PERIOD := 0.12
 
 # Stuck detection — opt-in per room type via teleport_when_stuck
 var teleport_when_stuck := false
@@ -23,6 +26,7 @@ var _stuck_timer := 0.0
 signal died
 
 var _is_dying := false
+var is_boss   := false
 
 func _ready() -> void:
 	add_to_group("enemy")
@@ -32,6 +36,25 @@ func _ready() -> void:
 func _physics_process(delta: float) -> void:
 	if player == null or not is_instance_valid(player):
 		return
+
+	# Freeze power-up — stop all AI movement and tint icy blue (bosses are immune)
+	if not is_boss and GameState.freeze_timer > 0.0:
+		velocity = Vector2.ZERO
+		modulate = Color(0.55, 0.85, 1.0, 1.0)
+		return
+
+	if _stun_timer > 0.0:
+		_stun_timer -= delta
+		_stun_flash_timer += delta
+		var flash := fmod(_stun_flash_timer, STUN_FLASH_PERIOD * 2.0) < STUN_FLASH_PERIOD
+		modulate = Color(1.8, 1.6, 0.3, 1.0) if flash else Color(0.5, 0.5, 0.5, 1.0)
+		velocity = velocity.move_toward(Vector2.ZERO, 1500.0 * delta)
+		move_and_slide()
+		_enforce_bounds()
+		return
+	if modulate != Color.WHITE:
+		modulate = Color.WHITE
+
 	_ai_update(delta)
 	_tick_effects(delta)
 	if is_queued_for_deletion():
@@ -69,6 +92,11 @@ func _tick_effects(delta: float) -> void:
 func _speed_multiplier() -> float:
 	return (1.0 - _slow_amount) if _slow_timer > 0.0 else 1.0
 
+func apply_knockback(impulse: Vector2, stun_duration: float) -> void:
+	velocity = impulse
+	_stun_timer = stun_duration
+	_stun_flash_timer = 0.0
+
 func apply_slow(amount: float, duration: float) -> void:
 	_slow_amount = amount
 	_slow_timer = duration
@@ -84,14 +112,25 @@ func _ai_update(_delta: float) -> void:
 func take_damage(amount: int) -> void:
 	if _is_dying:
 		return
-	health = max(0, health - amount)
+	# Insta-Kill power-up — one hit kills basic enemies (bosses are immune)
+	if not is_boss and GameState.insta_kill_timer > 0.0:
+		health = 0
+	else:
+		health = max(0, health - amount)
 	if health == 0:
+		_on_death()
+
+func nuke() -> void:
+	if not _is_dying:
 		_on_death()
 
 func _on_death() -> void:
 	_is_dying = true
 	if drop_core_type != 0:
 		_spawn_core_pickup()
+	# Power-up drop — basic enemies only, never bosses
+	if not is_boss:
+		_try_spawn_power_up()
 	# Life Steal — restore 2 HP to the player on kill
 	if GameState.player_perks.has("life_steal"):
 		var p := get_tree().get_first_node_in_group("player")
@@ -102,6 +141,19 @@ func _on_death() -> void:
 		_spawn_death_burst()
 	died.emit()
 	queue_free()
+
+func _try_spawn_power_up() -> void:
+	GameState.enemies_killed_this_room += 1
+	# Level 2 (room_counter == 1): guaranteed drop on the 2nd kill as a tutorial
+	var is_tutorial_drop := GameState.room_counter == 1 and GameState.enemies_killed_this_room == 2
+	if not is_tutorial_drop and randf() > 0.10:
+		return
+	var types := ["nuke", "insta_kill", "full_heal", "shield_burst", "speed_boost", "freeze"]
+	var picked: String = types[randi() % types.size()]
+	var pickup = load("res://scenes/pickups/PowerUpPickup.tscn").instantiate()
+	pickup.power_up_type = picked
+	pickup.global_position = global_position
+	get_parent().add_child(pickup)
 
 func _spawn_death_burst() -> void:
 	const BURST_RADIUS := 60.0

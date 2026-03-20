@@ -16,6 +16,7 @@ var _god_mode_btn: Button
 
 
 func _ready() -> void:
+	MusicManager.play_home_screen()
 	# Fill the entire window
 	anchor_right  = 1.0
 	anchor_bottom = 1.0
@@ -213,23 +214,51 @@ func _build_settings_panel() -> Control:
 	title.add_theme_color_override("font_color", TITLE_COLOR)
 	vbox.add_child(title)
 
-	var note := Label.new()
-	note.text = "Nothing here yet — check back later."
-	note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	note.add_theme_font_size_override("font_size", 15)
-	note.add_theme_color_override("font_color", Color(0.50, 0.46, 0.62))
-	vbox.add_child(note)
-
-	var gap := Control.new()
-	gap.custom_minimum_size = Vector2(0, 12)
-	vbox.add_child(gap)
+	vbox.add_child(_make_volume_row())
 
 	var back_btn := _make_button("BACK", BTN_NORMAL, BTN_HOVER)
 	back_btn.pressed.connect(func(): root.visible = false)
 	vbox.add_child(back_btn)
 
 	return root
+
+
+# --- Volume row (shared by settings panel) ---
+
+func _make_volume_row() -> Control:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 12)
+
+	var lbl := Label.new()
+	lbl.text = "MUSIC VOLUME"
+	lbl.custom_minimum_size = Vector2(180, 0)
+	lbl.add_theme_font_size_override("font_size", 16)
+	lbl.add_theme_color_override("font_color", BTN_TEXT)
+	row.add_child(lbl)
+
+	var slider := HSlider.new()
+	slider.min_value = 0.0
+	slider.max_value = 100.0
+	slider.step      = 1.0
+	slider.value     = MusicManager.volume * 100.0
+	slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	slider.custom_minimum_size   = Vector2(0, 20)
+	row.add_child(slider)
+
+	var val_lbl := Label.new()
+	val_lbl.custom_minimum_size    = Vector2(52, 0)
+	val_lbl.text                   = "%d%%" % int(MusicManager.volume * 100.0)
+	val_lbl.horizontal_alignment   = HORIZONTAL_ALIGNMENT_RIGHT
+	val_lbl.add_theme_font_size_override("font_size", 16)
+	val_lbl.add_theme_color_override("font_color", BTN_TEXT)
+	row.add_child(val_lbl)
+
+	slider.value_changed.connect(func(v: float):
+		MusicManager.set_volume(v / 100.0)
+		val_lbl.text = "%d%%" % int(v)
+	)
+
+	return row
 
 
 # --- Hardcore helpers ---
@@ -251,12 +280,15 @@ func _refresh_hardcore_btn() -> void:
 # --- Button callbacks ---
 
 func _on_start_pressed() -> void:
-	GameState.hardcore_mode  = GameState.hardcore_mode  # already set by toggle
-	GameState.player_health  = 1 if GameState.hardcore_mode else 100
-	GameState.player_cores   = [0, 0, 0]
-	GameState.player_perks   = []
-	GameState.exit_direction = ""
-	GameState.room_counter   = _dev_start_level - 1
+	GameState.hardcore_mode      = GameState.hardcore_mode  # already set by toggle
+	GameState.player_health            = 1 if GameState.hardcore_mode else 100
+	GameState.player_cores             = [0, 0, 0]
+	GameState.player_perks             = []
+	GameState.exit_direction           = ""
+	GameState.room_counter             = _dev_start_level - 1
+	GameState.endless_mode             = false
+	GameState.pending_win_screen       = false
+	GameState.boss_defeated_this_level = false
 	GameState.reset_boss_pool()
 	get_tree().change_scene_to_file("res://scenes/Main.tscn")
 

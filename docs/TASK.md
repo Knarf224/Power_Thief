@@ -49,7 +49,7 @@
 - [x] **Rogue Assassin** — chases, dashes at player within 120px, contact damage, drops Dash Core
 - [x] **Slime** — slow chase, contact damage, splits into 2 minis on death, Split Core drops from last mini
 - [x] **Ghost** — always intangible; only takes damage when player is within 100px, drops Phase Core (white); `_physics_process` calls `_enforce_bounds()` since Ghost bypasses `move_and_slide()`
-- [x] **Bomb Beetle** — chases, contact damage, explodes on death (70 dmg / 80px AoE), drops Explosion Core (brown)
+- [x] **Bomb Beetle** — chases player, self-destructs within 30px (triggers death → explosion), 70 dmg / 80px AoE blast + orange particle burst + DeathBurstFx ring (2.2× scale), drops Explosion Core (brown)
 - [x] **Ice Witch** — ranged, 180px preferred distance, shots slow player 50% for 3s, drops Ice Core (cyan projectile); sprite at 3× scale
 - [x] **Lightning Sprite** — fastest enemy (150 spd), ranged, fast fire rate, drops Lightning Core (yellow projectile)
 - [x] **Stone Golem** — tankiest (80 HP), absorbs 1 hit (recharges 8s), 25 contact dmg, drops Shield Core (gray)
@@ -106,7 +106,7 @@
 - [x] **11 perks fully implemented** — Auto-Fire, Rapid Fire, Stopping Power, Piercing Shot, Thorns, Life Steal, Death Burst, Berserker, Iron Will, Overclock, Gravity Push
 - [x] All perk gameplay effects live and active — not display-only
 - [x] Perk symbols displayed in HUD and perk selection UI
-- [ ] Win condition / end screen
+- [x] Win condition / end screen — `WinScreen.tscn` / `win_screen.gd` with "ENDLESS MODE" and "MAIN MENU" buttons; Main Menu resets all GameState and returns to HomeScreen
 
 ---
 
@@ -122,7 +122,7 @@
 - [x] **Perk Select screen** — fullscreen overlay on boss death; shows 2 perks with symbols, grays out already-owned ones, unpauses and frees self on pick
 - [x] **Dev tools (Home Screen)** — `[DEV] Start Level` picker (+/- buttons to set starting room_counter); `[DEV] God Mode` toggle (player health floors at 1, cannot die)
 - [ ] Core pickup prompt ("Press E to take / swap")
-- [ ] Win screen
+- [x] **Win Screen** — dark overlay with gold "YOU WON!" title; Endless Mode button (keeps fighting, enemy count grows) and Main Menu button (full state reset → HomeScreen); `scenes/ui/WinScreen.tscn`
 
 ---
 
@@ -142,22 +142,32 @@
 
 ---
 
+---
+
+## 7. Power-Up Buffs
+- [x] Power-up pickup scene — spinning orb with icon and label, 10s despawn with flash warning
+- [x] 10% drop chance from any non-boss enemy death; guaranteed tutorial drop in room 1
+- [x] **Nuke** ☢ — instantly kills all non-boss enemies; white screen flash
+- [x] **Insta Kill** ☠ — all hits one-shot non-boss enemies for 10s
+- [x] **Full Heal** ♥ — restores player to full HP instantly; floating hearts VFX
+- [x] **Shield Burst** ⬡ — full damage immunity for 8s; pulsing blue aura
+- [x] **Speed Boost** ⚡ — move speed ×2 for 10s; trailing particle effect
+- [x] **Freeze** ❄ — freezes all non-boss enemies in place for 8s; icy blue tint on enemies
+- [x] All 6 buffs documented in `docs/buff.md`
+
+---
+
 ## Remaining MVP Items
 - [ ] Additional room types (Gauntlet, Siege)
-- [ ] Win screen / end condition after all boss cycles
-- [ ] Core pickup prompt UI ("Press E to take / swap")
-- [ ] Core Selection UI — when all 3 slots are full, show UI to choose which slot to replace (currently auto-replaces slot 0)
+- [x] Core pickup prompt — cores become active and interactable after room is cleared; player walks within 100px and interacts to trigger the swap UI
+- [x] Core Selection UI — `CoreSwapUI.tscn` / `core_swap_ui.gd`; 2-step panel anchored bottom-center; Step 1 picks which core (if 2 nearby), Step 2 picks which slot to replace; shows current slot contents and incoming core name/color; ESC or Back cancels
 
 ---
 
 ## Upcoming Features
 
 ### Core Selection UI
-When the player picks up a core and all 3 slots are already full, display a slot-choice overlay so the player can decide which core to replace instead of auto-replacing slot 0.
-- [ ] Design and build `CoreSwapUI.tscn` — shows all 3 current slots + incoming core
-- [ ] Pause game while UI is open
-- [ ] Confirm selection replaces chosen slot; cancel keeps existing loadout
-- [ ] Integrate into `core_pickup.gd` pickup flow
+- [x] `CoreSwapUI.tscn` / `core_swap_ui.gd` — fully implemented; shows all 3 current slots + incoming core name and color-coded borders; ESC / Back cancels without equipping
 
 ### Balance & Tuning Pass
 Several cores and perks feel underpowered compared to others; dedicated tools are needed to iterate without rebuilding.
@@ -169,7 +179,10 @@ Several cores and perks feel underpowered compared to others; dedicated tools ar
 
 ### Sprite & Animation Improvements
 Replace remaining placeholder colored shapes with art assets and add idle/attack animations.
-- [ ] Replace all remaining colored polygon enemies with sprites (Assassin, Slime, Ghost, Bomb Beetle, Lightning Sprite, Stone Golem, Necromancer, Poison Toad)
+- [x] **Ghost** — sprite from `Ghost_Sheet.png` (128×32, 4×32px frames, 8fps animated walk cycle)
+- [x] **Bomb Beetle** — sprite from `bug_sheet.png` (248×64, 4×62px frames, 8fps) at 0.75× scale; directional rotation snaps to cardinal facing direction
+- [x] **Stone Golem** — sprite from `golem_sheet.png` (192×64, 3×64px frames, 6fps) at 1.125× scale
+- [ ] Replace remaining colored polygon enemies with sprites (Assassin, Slime, Lightning Sprite, Necromancer, Poison Toad)
 - [ ] Replace all boss placeholder shapes with sprites
 - [ ] Add idle animation (looping) for player and all enemies
 - [ ] Add attack/shoot animation frame for ranged enemies
@@ -218,7 +231,7 @@ new-game-project/
 │   ├── core_system/  # CorePickup.tscn
 │   ├── dungeon/      # AmbushRoom.tscn, HazardFloorRoom.tscn, PowerZoneRoom.tscn, BlackoutRoom.tscn
 │   ├── fx/           # DeathBurstFx.tscn, GravityPushFx.tscn
-│   └── ui/           # HUD.tscn, HomeScreen.tscn, PerkSelect.tscn
+│   └── ui/           # HUD.tscn, HomeScreen.tscn, PerkSelect.tscn, WinScreen.tscn
 ├── scripts/
 │   ├── autoload/     # game_state.gd  ← persists all run state across scene changes
 │   ├── player/       # player.gd, projectile.gd, fire_bomb.gd, dash_explosion.gd, summoned_ally.gd
@@ -232,12 +245,13 @@ new-game-project/
 │   ├── dungeon/      # main.gd, ambush_room.gd, hazard_floor_room.gd, power_zone_room.gd
 │   │                 # blackout_overlay.gd
 │   ├── fx/           # death_burst_fx.gd, gravity_push_fx.gd
-│   └── ui/           # hud.gd, home_screen.gd, perk_select.gd
-├── docs/             # boss.md, enemies.md, rooms.md, staging.md, TASK.md
+│   ├── pickups/      # power_up_pickup.gd
+│   └── ui/           # hud.gd, home_screen.gd, perk_select.gd, win_screen.gd
+├── docs/             # boss.md, buff.md, enemies.md, rooms.md, staging.md, TASK.md
 ├── resources/
 │   └── power_cores/  # (placeholder)
 └── assets/
     ├── sprites/      # player_sprite.png
-    ├── enemies/      # (placeholder)
+    ├── enemies/      # fire_mage.png, frost_mage.png, rogue_assassin.png, Ghost_Sheet.png, bug_sheet.png, golem_sheet.png
     └── audio/        # (placeholder)
 ```

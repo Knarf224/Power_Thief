@@ -44,6 +44,7 @@ var _last_special_scene   := ""  # prevents the same special appearing twice in 
 
 func next_room_scene() -> String:
 	boss_defeated_this_level = false
+	enemies_killed_this_room = 0
 	if staging_mode:
 		return staging_room
 	var scene := _pick_room()
@@ -134,6 +135,9 @@ const BOSS_SCENES: Array = [
 func is_boss_level() -> bool:
 	# room_counter is already incremented before the room loads, so
 	# room_counter + 1 == the level number being played.
+	# Endless mode has no boss levels — only enemy count scales.
+	if endless_mode:
+		return false
 	return (room_counter + 1) % 4 == 0
 
 # ---------------------------------------------------------------------------
@@ -181,6 +185,9 @@ func stage_perk_select(perk_a: String, perk_b: String) -> void:
 	_pending_perk_a = perk_a
 	_pending_perk_b = perk_b
 	boss_defeated_this_level = true
+	# Level 20 = all 5 bosses cleared — queue the win screen after perk pick
+	if room_counter + 1 == 20:
+		pending_win_screen = true
 
 func open_pending_perk_select() -> void:
 	call_deferred("_open_perk_select")
@@ -195,9 +202,21 @@ func _open_perk_select() -> void:
 	selector.set("perk_b", _pending_perk_b)
 	get_tree().root.add_child(selector)
 
+func open_win_screen() -> void:
+	call_deferred("_open_win_screen")
+
+func _open_win_screen() -> void:
+	var packed := load("res://scenes/ui/WinScreen.tscn") as PackedScene
+	if packed == null:
+		push_error("GameState: failed to load WinScreen.tscn")
+		return
+	get_tree().root.add_child(packed.instantiate())
+
 var staging_mode := false
 var staging_room  := "res://scenes/dungeon/HazardFloorRoom.tscn"
 var god_mode     := false
+var endless_mode := false          # true after player beats level 20 and picks Endless
+var pending_win_screen := false    # set on level-20 boss death; consumed by PerkSelect
 
 # ---------------------------------------------------------------------------
 # QUICK MODE — set to true to test the room ORDER algorithm.
@@ -206,6 +225,21 @@ var god_mode     := false
 # Use F5 (full game) so the room sequence starts from the beginning.
 # ---------------------------------------------------------------------------
 var quick_mode := false
+
+# ---------------------------------------------------------------------------
+# TIMED POWER-UP BUFFS
+# ---------------------------------------------------------------------------
+var insta_kill_timer   := 0.0
+var shield_burst_timer := 0.0
+var speed_boost_timer  := 0.0
+var freeze_timer       := 0.0
+var enemies_killed_this_room: int = 0
+
+func _process(delta: float) -> void:
+	insta_kill_timer   = max(0.0, insta_kill_timer   - delta)
+	shield_burst_timer = max(0.0, shield_burst_timer - delta)
+	speed_boost_timer  = max(0.0, speed_boost_timer  - delta)
+	freeze_timer       = max(0.0, freeze_timer       - delta)
 
 func get_enemy_count(default_count: int) -> int:
 	if staging_mode or quick_mode:
@@ -220,4 +254,7 @@ func get_enemy_count(default_count: int) -> int:
 	#
 	# Progression (default_count = 2, +2 per level, capped at 24):
 	#   L1=2  L2=4  L3=6  L4=boss  L5=10  L6=12  L7=14  L8=boss  L9=18 ...
+	# In endless mode the cap is lifted — enemy count keeps climbing
+	if endless_mode:
+		return default_count + room_counter * 2
 	return mini(default_count + room_counter * 2, 24)

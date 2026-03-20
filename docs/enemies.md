@@ -74,7 +74,7 @@ Use this file to track and balance all entity stats. Update it whenever values c
 ---
 
 ### Ghost
-> `scripts/enemies/ghost.gd` | Color: White
+> `scripts/enemies/ghost.gd` | Sprite: `Ghost_Sheet.png` (4-frame walk, 8fps, 32×32px frames)
 
 | Property             | Value      | Notes                                                   |
 |----------------------|------------|---------------------------------------------------------|
@@ -89,17 +89,19 @@ Use this file to track and balance all entity stats. Update it whenever values c
 ---
 
 ### Bomb Beetle
-> `scripts/enemies/bomb_beetle.gd` | Color: Brown/Orange
+> `scripts/enemies/bomb_beetle.gd` | Sprite: `bug_sheet.png` (4-frame, 8fps, 62×64px frames) at 0.75× scale
 
-| Property               | Value  | Notes                                             |
-|------------------------|--------|---------------------------------------------------|
-| Max Health             | 45     |                                                   |
-| Move Speed             | 70     | Slow — danger is the death explosion              |
-| Contact Damage         | 10     |                                                   |
-| Contact Cooldown       | 0.8s   |                                                   |
-| Death Explosion Radius | 80px   | AoE on death — punishes close-range kills         |
-| Death Explosion Damage | 70     | Applied to player if in range                     |
-| Drops                  | Explosion Core                                    |
+| Property               | Value  | Notes                                                          |
+|------------------------|--------|----------------------------------------------------------------|
+| Max Health             | 45     |                                                                |
+| Move Speed             | 70     | Slow — danger is the death explosion                           |
+| Detonate Range         | 30px   | Self-destructs when this close to the player (calls take_damage(max_health)) |
+| Contact Damage         | —      | Does NOT deal contact damage — only self-destructs             |
+| Explosion Radius       | 80px   | AoE blast — punishes close-range kills                         |
+| Explosion Damage       | 70     | Applied to player if within blast radius                       |
+| Explosion VFX          | Orange CPUParticles2D burst + DeathBurstFx ring at 2.2× scale |
+| Directional rotation   | Sprite rotates to face movement direction (4-cardinal snap)    |
+| Drops                  | Explosion Core                                                 |
 
 ---
 
@@ -139,7 +141,7 @@ Use this file to track and balance all entity stats. Update it whenever values c
 ---
 
 ### Stone Golem
-> `scripts/enemies/stone_golem.gd` | Color: Gray
+> `scripts/enemies/stone_golem.gd` | Sprite: `golem_sheet.png` (3-frame, 6fps, 64×64px frames) at 1.125× scale
 
 | Property             | Value  | Notes                                             |
 |----------------------|--------|---------------------------------------------------|
@@ -207,7 +209,7 @@ Use this file to track and balance all entity stats. Update it whenever values c
 | Slime Contact (full)                        | 8                   | 0.6s            |
 | Slime Contact (mini)                        | 8                   | 0.6s            |
 | Ghost Contact                               | 12                  | 0.8s            |
-| Bomb Beetle Contact                         | 10                  | 0.8s            |
+| Bomb Beetle Self-Destruct (proximity)       | —                   | Triggers at 30px|
 | Bomb Beetle Death Explosion                 | 70                  | Once (on death) |
 | Ice Witch Projectile                        | 15 + 50% slow (3s)  | 1.5s per shot   |
 | Lightning Sprite Projectile                 | 12 (8 per chain)    | 0.8s per shot   |
@@ -228,7 +230,7 @@ Use this file to track and balance all entity stats. Update it whenever values c
 | Slime (full)                       | 60  | 4 (then splits)                         |
 | Slime (mini)                       | 30  | 2                                       |
 | Ghost                              | 30  | 2 (only hittable within 100px)          |
-| Bomb Beetle                        | 45  | 3 (death explosion 70 dmg — keep range) |
+| Bomb Beetle                        | 45  | 3 (self-destructs at 30px — always kill from range; 70 dmg explosion) |
 | Ice Witch                          | 40  | 3                                       |
 | Lightning Sprite                   | 20  | 2                                       |
 | Stone Golem                        | 80  | 5 (first shot hits shield)              |
@@ -418,6 +420,6 @@ Use this file to track and balance all entity stats. Update it whenever values c
 - **Ghost** is always immune until you close the gap to 100px — forces risky melee range; now dies in 2 shots once in range
 - **Necromancer** should still be prioritized: summons every 4s up to 3 spirits, each doing 15 contact damage — still snowballs quickly, but now dies in 2 shots (35 HP / 18 dmg = 2)
 - **Summoned Spirit** still dies in 1 shot (10 HP)
-- **Bomb Beetle** death explosion hits for 70 damage — nearly lethal in one blast, always kill from range
+- **Bomb Beetle** self-destructs when within 30px of the player — it has no contact damage, but the 70 dmg explosion is nearly lethal. Always kill from range. Visual: orange particle burst + scaled DeathBurstFx ring so the player knows it detonated.
 - Active cores (slot keys 1/2/3): Fire Core, Phase Core, Summon Core — each responds to the key of whichever slot it occupies, so multiple actives can coexist
 - **_enforce_bounds() safety net:** `base_enemy.gd` includes an `_enforce_bounds()` method that snaps any enemy whose `global_position` has escaped the viewport back to the room center. Ghost's `_physics_process` calls this explicitly since Ghost bypasses `move_and_slide()`. This prevents enemies disappearing off-screen permanently.

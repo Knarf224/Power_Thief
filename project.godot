@@ -18,6 +18,7 @@ config/run/main_scene="res://scenes/ui/HomeScreen.tscn"
 [autoload]
 
 GameState="*res://scripts/autoload/game_state.gd"
+MusicManager="*res://scripts/autoload/music_manager.gd"
 
 [display]
 

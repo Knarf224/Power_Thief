@@ -374,4 +374,9 @@ The perk UI fires **after all enemies in the room are dead** (not just the boss)
 - [x] All 4 room state machines skip core activation on boss levels; open exits + show perk UI instead
 
 ### Pending
-- [ ] Win screen / end condition after all boss cycles complete
+- [x] Win screen / end condition — `WinScreen.tscn` shown after all 5 bosses defeated; Endless Mode or Main Menu buttons
+
+### Bug Fixes Applied
+- **Level 4 crash (boss scene null load):** `boss_base.gd` was re-declaring `var is_boss := true` which already exists in `base_enemy.gd` — GDScript 4 parse error caused all boss `.tscn` files to return `null` on `load()`, crashing on `.instantiate()`. Fixed by removing the `var` declaration and using assignment `is_boss = true` in `_ready()`.
+- **`warden.gd` extends path typo:** `"boses"` corrected to `"bosses"`.
+- **`phantom.gd` extends prefix typo:** `sextends` corrected to `extends`.

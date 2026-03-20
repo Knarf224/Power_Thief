@@ -7,6 +7,8 @@ const CONTACT_COOLDOWN = 0.6
 var is_mini := false
 var _contact_cooldown := 0.0
 
+@onready var _visual: AnimatedSprite2D = $Visual
+
 func _ready() -> void:
 	super()
 	if is_mini:
@@ -14,6 +16,12 @@ func _ready() -> void:
 		health = 30
 		drop_core_type = 0
 		add_to_group("slime_mini")
+		# Shrink the sprite
+		_visual.scale = Vector2(0.6, 0.6)
+		# Shrink the collision shape to match
+		var shape := ($CollisionShape2D.shape as CircleShape2D).duplicate() as CircleShape2D
+		shape.radius = 9.0
+		$CollisionShape2D.shape = shape
 	else:
 		max_health = 60
 		health = 60

@@ -13,15 +13,31 @@ const CORE_COLORS = {
 	10: Color(0.45, 0.8, 0.1, 1),  # POISON    - yellow-green
 }
 
+const CORE_NAMES = {
+	0:  "Empty",
+	1:  "Dash",
+	2:  "Fire",
+	3:  "Split",
+	4:  "Phase",
+	5:  "Explosion",
+	6:  "Ice",
+	7:  "Lightning",
+	8:  "Shield",
+	9:  "Summon",
+	10: "Poison",
+}
+
+const INTERACT_RANGE := 100.0
+
 var core_type := 0
-var _time := 0.0
+var is_active  := false
+var _time      := 0.0
 
 @onready var visual: Polygon2D = $Visual
 
 func _ready() -> void:
 	add_to_group("core_pickup")
-	body_entered.connect(_on_body_entered)
-	monitoring = false
+	monitoring = false  # no longer auto-triggered on overlap
 	if CORE_COLORS.has(core_type):
 		visual.color = CORE_COLORS[core_type]
 	visual.modulate.a = 0.25
@@ -31,15 +47,14 @@ func _process(delta: float) -> void:
 	position.y += sin(_time * 3.0) * 0.4
 
 func activate() -> void:
-	monitoring = true
+	is_active = true
 	visual.modulate.a = 1.0
 
-func _on_body_entered(body: Node) -> void:
-	if not body.is_in_group("player"):
-		return
-	body.equip_core(core_type)
-	# Remove all other cores — one per room
-	for pickup in get_tree().get_nodes_in_group("core_pickup"):
-		if pickup != self:
-			pickup.queue_free()
-	queue_free()
+func is_player_in_range(player_pos: Vector2) -> bool:
+	return is_active and global_position.distance_to(player_pos) <= INTERACT_RANGE
+
+func get_core_color() -> Color:
+	return CORE_COLORS.get(core_type, Color.WHITE)
+
+func get_core_name() -> String:
+	return CORE_NAMES.get(core_type, "?")

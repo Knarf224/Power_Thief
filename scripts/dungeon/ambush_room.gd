@@ -70,9 +70,12 @@ func _ready() -> void:
 	_setup_triggers()
 	player.health_changed.connect(hud.update_health)
 	player.cores_changed.connect(hud.update_cores)
+	player.stamina_changed.connect(hud.update_stamina)
 	player.died.connect(_on_player_died)
 	hud.update_health(player.health, player.MAX_HEALTH)
 	hud.update_cores(player.core_slots)
+	hud.update_stamina(player.stamina, player.MAX_STAMINA)
+	MusicManager.on_room_entered(GameState.room_counter)
 	# Start player in the corridor arm opposite to where they exited
 	# Default lands in south arm — safely outside all trigger zones
 	match GameState.exit_direction:
@@ -100,7 +103,7 @@ func _process(delta: float) -> void:
 	match _state:
 		RoomState.FIGHTING:
 			if _any_triggered and get_tree().get_nodes_in_group("enemy").is_empty():
-				if GameState.boss_defeated_this_level:
+				if GameState.boss_defeated_this_level and GameState.is_boss_level():
 					_blackout.deactivate()
 					_open_exits()
 					GameState.open_pending_perk_select()
