@@ -218,21 +218,14 @@ Track runs and deaths via Supabase; display on the Milk Chug Studios website.
 
 **Export path:** `./index.html` (game project root → copy manually to website)
 
-**After every Godot export, perform these steps in order:**
-1. Open `index.html` in the game project root and re-add the SW unregister script inside `<body>`:
-   ```html
-   <script>
-     if ('serviceWorker' in navigator) {
-       navigator.serviceWorker.getRegistrations().then(function(registrations) {
-         for (var r of registrations) { r.unregister(); }
-       });
-     }
-   </script>
-   ```
-2. Copy the correct thumbnail: `cp assets/thumbnail.png ../../../milk-chug-studios-website/public/play/power-thief/index.png`
-   *(Godot overwrites index.png with its own splash — must restore after every export)*
-3. Copy all export files: `cp index.* ../../../milk-chug-studios-website/public/play/power-thief/`
-4. Commit and push the website repo.
+**After every Godot export, run ONE command:**
+```bash
+bash deploy.sh
+```
+Then test locally at `http://localhost:4321/games/power-thief` before pushing to Vercel.
+
+The script handles automatically: COEP flag fix, SW unregister injection, thumbnail restore, file copy to website.
+See `docs/backendops.md` for full testing strategy.
 
 **Known fragile points:**
 - `index.html` SW script is deleted on every Godot export — must re-inject every time

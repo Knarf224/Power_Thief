@@ -206,21 +206,40 @@ This proxy only works in `astro dev`. Production deployments need a server-side 
 
 ## Deployment Workflow
 
+### Testing Strategy — avoid unnecessary Vercel deploys
+
+**Rule: test the smallest scope first. Only escalate when the current scope passes.**
+
+| What changed | Test scope | How |
+|---|---|---|
+| Game logic (movement, damage, AI) | Godot editor | Press F5 in Godot — instant, no export |
+| Web rendering (fonts, UI layout) | Local astro dev | Export → `bash deploy.sh` → `npm run dev` → localhost:4321 |
+| Networking (tracker, leaderboard) | Local astro dev | Same as above — Vite proxy handles Supabase |
+| Everything confirmed working | Push to Vercel | `git push` in website repo |
+
+**Never push to Vercel just to test.** Anything testable at localhost should be tested there first.
+
 ### Local development
 ```bash
-# Run website dev server (includes Vite proxy)
+# Run website dev server (includes Vite proxy for Supabase)
 cd D:\Coding_W_Knarf\Coding\milk-chug-studios-website
 npm run dev
-# → http://localhost:4321
+# → http://localhost:4321/games/power-thief
 ```
 
-### Godot web export checklist
-1. Project → Export → Web → Export Project
-2. Export destination: `public/games/power-thief/`
-3. Exported file must be named `index.html` (rename if Godot exports as `pt_webgame.html`)
-4. Open `public/games/power-thief/index.html`
-5. Find `"ensureCrossOriginIsolationHeaders"` and set to `false`
-6. Save. Do not skip this step — it resets to `true` on every export.
+### Godot web export + deploy (automated)
+1. In Godot: Project → Export → Web → Export Project → destination: `./index.html` (game project root)
+2. In bash (from game project root):
+   ```bash
+   bash deploy.sh
+   ```
+   This script automatically:
+   - Sets `ensureCrossOriginIsolationHeaders` to `false`
+   - Injects the SW unregister script into `<body>` (if missing)
+   - Restores `assets/thumbnail.png` → `index.png`
+   - Copies all `index.*` files to `public/play/power-thief/`
+3. Test at `http://localhost:4321/games/power-thief` (with `npm run dev` running)
+4. When confirmed working locally → commit and push the website repo
 
 ### Website deploy to production (milkchugstudios.com)
 ```bash

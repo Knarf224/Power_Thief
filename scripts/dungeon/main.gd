@@ -94,9 +94,10 @@ func _ready() -> void:
 	else:
 		_spawn_count = GameState.get_enemy_count(2)
 
-	_blackout = load("res://scripts/dungeon/blackout_overlay.gd").new()
-	_blackout.activation_chance = 0.90
-	add_child(_blackout)
+	var BlackoutClass = load("res://scripts/dungeon/blackout_overlay.gd")
+	if BlackoutClass:
+		_blackout = BlackoutClass.new()
+		add_child(_blackout)
 
 
 func _process(delta: float) -> void:
@@ -117,6 +118,7 @@ func _process(delta: float) -> void:
 	match _state:
 		RoomState.FIGHTING:
 			if _enemies_spawned and get_tree().get_nodes_in_group("enemy").is_empty():
+				if _blackout:
 				_blackout.deactivate()
 				if GameState.boss_defeated_this_level and GameState.is_boss_level():
 					_open_exits()
@@ -233,7 +235,7 @@ func _create_floor() -> void:
 		Vector2(0, 0), Vector2(ROOM_W, 0),
 		Vector2(ROOM_W, ROOM_H), Vector2(0, ROOM_H)
 	])
-	floor_vis.color = Color(0.12, 0.12, 0.18)
+	floor_vis.color = Color(0.20, 0.20, 0.30)
 	add_child(floor_vis)
 	move_child(floor_vis, 0)
 
