@@ -42,6 +42,7 @@ func _on_death() -> void:
 	if _is_dying:
 		return
 	_is_dying = true
+	Tracker.record_kill(get_script().resource_path)
 	_show_perk_choice()
 	died.emit()
 	queue_free()

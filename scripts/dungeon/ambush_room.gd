@@ -47,7 +47,8 @@ const ENEMY_POOL = [
 
 # Total enemy count is taken from the global scale (base 8 ≈ 2 per room at room 1)
 # and divided evenly across the 4 corner rooms. Computed once in _ready().
-var _enemies_per_room: int = 2
+# Per-room enemy counts (round-robin distribution ensures all enemies are placed)
+var _room_counts: Dictionary = {}
 
 var _state := RoomState.IDLE
 var _triggered: Dictionary = {}
@@ -85,7 +86,12 @@ func _ready() -> void:
 		"south": player.position = Vector2(960,  100)
 		_:       player.position = Vector2(960,  900)
 	var total := GameState.get_boss_companion_count() if GameState.is_boss_level() else GameState.get_enemy_count(2)
-	_enemies_per_room = maxi(1, total / 4)
+	# Distribute enemies evenly across all 4 rooms via round-robin
+	var room_keys := ROOMS.keys()
+	for key in room_keys:
+		_room_counts[key] = 0
+	for i in total:
+		_room_counts[room_keys[i % room_keys.size()]] += 1
 
 	if GameState.is_boss_level():
 		_spawn_boss()
@@ -137,14 +143,6 @@ func _on_room_entered(body: Node2D, room_name: String) -> void:
 	if _triggered.get(room_name, false):
 		return
 	_trigger_room(room_name)
-	# Also trigger one random other untriggered room
-	var others: Array = []
-	for r in ROOMS:
-		if r != room_name and not _triggered.get(r, false):
-			others.append(r)
-	if not others.is_empty():
-		others.shuffle()
-		_trigger_room(others[0])
 
 func _on_center_entered(body: Node2D) -> void:
 	if not _triggers_armed or body != player:
@@ -163,20 +161,25 @@ func _trigger_room(room_name: String) -> void:
 func _spawn_boss() -> void:
 	var boss = load(GameState.get_boss_scene()).instantiate()
 	add_child(boss)
+	boss.room_bounds = Rect2(0, 0, ROOM_W, ROOM_H)
 	# Boss spawns in the center corridor where the player starts
 	boss.global_position = Vector2(ROOM_W / 2.0, ROOM_H / 2.0)
 
 func _spawn_in_room(room_name: String) -> void:
+	var count: int = _room_counts.get(room_name, 0)
+	if count == 0:
+		return
 	var rect: Rect2 = ROOMS[room_name]
 	var pool := ENEMY_POOL.duplicate()
 	pool.shuffle()
 	var padding := 60.0
-	for i in _enemies_per_room:
+	for i in count:
 		var enemy = load(pool[i % pool.size()]).instantiate()
 		add_child(enemy)
 		enemy.teleport_when_stuck = true
 		enemy.teleport_target = Vector2(ROOM_W / 2.0, ROOM_H / 2.0)
 		enemy.teleport_zones = TELEPORT_ZONES
+		enemy.room_bounds = Rect2(0, 0, ROOM_W, ROOM_H)
 		enemy.global_position = Vector2(
 			randf_range(rect.position.x + padding, rect.end.x - padding),
 			randf_range(rect.position.y + padding, rect.end.y - padding)

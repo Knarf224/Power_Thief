@@ -28,6 +28,16 @@ func _ai_update(delta: float) -> void:
 	if _shoot_timer <= 0.0:
 		_shoot()
 		_shoot_timer = SHOOT_COOLDOWN
+	_update_anim()
+
+func _update_anim() -> void:
+	var visual = $Visual
+	if velocity.length() > 1.0:
+		visual.play("walk")
+		if velocity.x != 0:
+			visual.flip_h = velocity.x < 0
+	else:
+		visual.play("default")
 
 func _shoot() -> void:
 	if projectile_scene == null:

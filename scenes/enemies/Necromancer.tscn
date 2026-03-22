@@ -1,7 +1,23 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=13 format=3]
 
 [ext_resource type="Script" path="res://scripts/enemies/necromancer.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/enemies/NecromancerProjectile.tscn" id="2"]
+[ext_resource type="Texture2D" path="res://assets/enemies/necro.png" id="3"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_0"]
+atlas = ExtResource("3")
+region = Rect2(0, 0, 32, 32)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_1"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_0")
+}],
+"loop": true,
+"name": &"default",
+"speed": 1.0
+}]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_1"]
 size = Vector2(20, 26)
@@ -13,6 +29,7 @@ projectile_scene = ExtResource("2")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_1")
 
-[node name="Visual" type="Polygon2D" parent="."]
-polygon = PackedVector2Array(-10, -13, 10, -13, 10, 13, -10, 13)
-color = Color(0.3, 0.05, 0.4, 1)
+[node name="Visual" type="AnimatedSprite2D" parent="."]
+texture_filter = 1
+sprite_frames = SubResource("SpriteFrames_1")
+autoplay = "default"

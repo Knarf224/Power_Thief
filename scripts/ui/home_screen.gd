@@ -10,12 +10,11 @@ const HC_HOVER     := Color(0.60, 0.10, 0.10)
 
 var _hardcore_btn: Button
 var _settings_panel: Control
-var _dev_start_level := 1
-var _dev_level_label: Label
-var _god_mode_btn: Button
+var _account_btn: Button
 
 
 func _ready() -> void:
+	PlayerAuth.auth_changed.connect(_on_auth_changed)
 	MusicManager.play_home_screen()
 	# Fill the entire window
 	anchor_right  = 1.0
@@ -65,6 +64,22 @@ func _ready() -> void:
 	start_btn.pressed.connect(_on_start_pressed)
 	vbox.add_child(start_btn)
 
+	# Account / Log In
+	_account_btn = _make_button(_account_label(), BTN_NORMAL, BTN_HOVER)
+	_account_btn.pressed.connect(_on_account_pressed)
+	_refresh_account_btn()
+	vbox.add_child(_account_btn)
+
+	# Almanac
+	var almanac_btn := _make_button("TRACKER", BTN_NORMAL, BTN_HOVER)
+	almanac_btn.pressed.connect(_on_almanac_pressed)
+	vbox.add_child(almanac_btn)
+
+	# Leaderboard
+	var leaderboard_btn := _make_button("LEADERBOARD", BTN_NORMAL, BTN_HOVER)
+	leaderboard_btn.pressed.connect(_on_leaderboard_pressed)
+	vbox.add_child(leaderboard_btn)
+
 	# Settings
 	var settings_btn := _make_button("SETTINGS", BTN_NORMAL, BTN_HOVER)
 	settings_btn.pressed.connect(_on_settings_pressed)
@@ -75,10 +90,6 @@ func _ready() -> void:
 	_hardcore_btn.pressed.connect(_on_hardcore_pressed)
 	_refresh_hardcore_btn()
 	vbox.add_child(_hardcore_btn)
-
-	# DEV — Start at Level picker + God Mode toggle
-	vbox.add_child(_build_dev_level_row())
-	vbox.add_child(_build_god_mode_row())
 
 	# Settings overlay (hidden until Settings is pressed)
 	_settings_panel = _build_settings_panel()
@@ -114,74 +125,6 @@ func _apply_btn_style(btn: Button, normal_color: Color, hover_color: Color) -> v
 
 	# Remove focus box so there's no ugly dotted border
 	btn.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
-
-
-# --- DEV level picker ---
-
-func _build_dev_level_row() -> Control:
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 8)
-
-	var lbl := Label.new()
-	lbl.text = "[DEV] START LEVEL:"
-	lbl.add_theme_font_size_override("font_size", 14)
-	lbl.add_theme_color_override("font_color", Color(0.55, 0.80, 0.55))
-	lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(lbl)
-
-	var minus_btn := Button.new()
-	minus_btn.text = "  -  "
-	minus_btn.add_theme_font_size_override("font_size", 16)
-	minus_btn.add_theme_color_override("font_color", BTN_TEXT)
-	_apply_btn_style(minus_btn, BTN_NORMAL, BTN_HOVER)
-	minus_btn.pressed.connect(func():
-		_dev_start_level = max(1, _dev_start_level - 1)
-		_dev_level_label.text = str(_dev_start_level)
-	)
-	row.add_child(minus_btn)
-
-	_dev_level_label = Label.new()
-	_dev_level_label.text = str(_dev_start_level)
-	_dev_level_label.custom_minimum_size = Vector2(36, 0)
-	_dev_level_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_dev_level_label.add_theme_font_size_override("font_size", 18)
-	_dev_level_label.add_theme_color_override("font_color", Color(0.90, 1.0, 0.90))
-	row.add_child(_dev_level_label)
-
-	var plus_btn := Button.new()
-	plus_btn.text = "  +  "
-	plus_btn.add_theme_font_size_override("font_size", 16)
-	plus_btn.add_theme_color_override("font_color", BTN_TEXT)
-	_apply_btn_style(plus_btn, BTN_NORMAL, BTN_HOVER)
-	plus_btn.pressed.connect(func():
-		_dev_start_level += 1
-		_dev_level_label.text = str(_dev_start_level)
-	)
-	row.add_child(plus_btn)
-
-	return row
-
-
-func _build_god_mode_row() -> Control:
-	_god_mode_btn = _make_button(_god_mode_label(), BTN_NORMAL, BTN_HOVER)
-	_refresh_god_mode_btn()
-	_god_mode_btn.pressed.connect(func():
-		GameState.god_mode = not GameState.god_mode
-		_refresh_god_mode_btn()
-	)
-	return _god_mode_btn
-
-func _god_mode_label() -> String:
-	return "[DEV] GOD MODE:  ON" if GameState.god_mode else "[DEV] GOD MODE:  OFF"
-
-func _refresh_god_mode_btn() -> void:
-	_god_mode_btn.text = _god_mode_label()
-	if GameState.god_mode:
-		_apply_btn_style(_god_mode_btn, Color(0.05, 0.25, 0.08), Color(0.08, 0.38, 0.12))
-		_god_mode_btn.add_theme_color_override("font_color", Color(0.60, 1.0, 0.65))
-	else:
-		_apply_btn_style(_god_mode_btn, BTN_NORMAL, BTN_HOVER)
-		_god_mode_btn.add_theme_color_override("font_color", Color(0.55, 0.80, 0.55))
 
 
 # --- Settings panel ---
@@ -280,12 +223,11 @@ func _refresh_hardcore_btn() -> void:
 # --- Button callbacks ---
 
 func _on_start_pressed() -> void:
-	GameState.hardcore_mode      = GameState.hardcore_mode  # already set by toggle
 	GameState.player_health            = 1 if GameState.hardcore_mode else 100
 	GameState.player_cores             = [0, 0, 0]
 	GameState.player_perks             = []
 	GameState.exit_direction           = ""
-	GameState.room_counter             = _dev_start_level - 1
+	GameState.room_counter             = 0
 	GameState.endless_mode             = false
 	GameState.pending_win_screen       = false
 	GameState.boss_defeated_this_level = false
@@ -300,3 +242,40 @@ func _on_settings_pressed() -> void:
 func _on_hardcore_pressed() -> void:
 	GameState.hardcore_mode = not GameState.hardcore_mode
 	_refresh_hardcore_btn()
+
+
+# --- Account helpers ---
+
+func _account_label() -> String:
+	if PlayerAuth.is_logged_in():
+		return "ACCOUNT:  " + PlayerAuth.username.to_upper()
+	return "LOG IN / REGISTER"
+
+
+func _refresh_account_btn() -> void:
+	_account_btn.text = _account_label()
+	if PlayerAuth.is_logged_in():
+		_apply_btn_style(_account_btn, Color(0.07, 0.14, 0.24), Color(0.11, 0.21, 0.35))
+		_account_btn.add_theme_color_override("font_color", Color(0.55, 0.85, 1.00))
+	else:
+		_apply_btn_style(_account_btn, BTN_NORMAL, BTN_HOVER)
+		_account_btn.add_theme_color_override("font_color", BTN_TEXT)
+
+
+func _on_auth_changed(_logged_in: bool) -> void:
+	_refresh_account_btn()
+
+
+func _on_account_pressed() -> void:
+	var screen: Node = load("res://scripts/ui/login_screen.gd").new()
+	get_tree().root.add_child(screen)
+
+
+func _on_almanac_pressed() -> void:
+	var screen: Node = load("res://scripts/ui/almanac_screen.gd").new()
+	get_tree().root.add_child(screen)
+
+
+func _on_leaderboard_pressed() -> void:
+	var screen: Node = load("res://scripts/ui/leaderboard_screen.gd").new()
+	get_tree().root.add_child(screen)

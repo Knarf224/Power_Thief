@@ -31,7 +31,7 @@ const CORE_NAMES = {
 var _nearby_cores: Array = []
 var _player = null
 var _selected_core_type := -1
-var _from_multi_step    := false   # true if we came from the core-picker step
+var _from_multi_step    := false
 var _content: VBoxContainer
 
 
@@ -56,15 +56,14 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _build_panel() -> void:
-	# Anchored to bottom-centre of the viewport
 	var panel := PanelContainer.new()
 	panel.anchor_left   = 0.5
 	panel.anchor_right  = 0.5
 	panel.anchor_top    = 1.0
 	panel.anchor_bottom = 1.0
-	panel.offset_left   = -310
-	panel.offset_right  = 310
-	panel.offset_top    = -275
+	panel.offset_left   = -320
+	panel.offset_right  = 320
+	panel.offset_top    = -290
 	panel.offset_bottom = -20
 
 	var style := StyleBoxFlat.new()
@@ -75,7 +74,7 @@ func _build_panel() -> void:
 	add_child(panel)
 
 	_content = VBoxContainer.new()
-	_content.add_theme_constant_override("separation", 14)
+	_content.add_theme_constant_override("separation", 12)
 	panel.add_child(_content)
 
 
@@ -115,8 +114,8 @@ func _show_slot_step(core_type: int, from_multi: bool) -> void:
 
 	var col: Color = CORE_COLORS[core_type] if CORE_COLORS.has(core_type) else Color.WHITE
 	var col_name: String = CORE_NAMES[core_type] if CORE_NAMES.has(core_type) else "?"
-	_add_title("PLACE  %s CORE" % col_name, col)
-	_add_subtitle("Choose a slot to replace  (1 / 2 / 3)")
+	_add_title("EQUIP  %s  CORE" % col_name.to_upper(), col)
+	_add_subtitle("Choose a slot to place it in")
 
 	var hbox := HBoxContainer.new()
 	hbox.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -130,7 +129,6 @@ func _show_slot_step(core_type: int, from_multi: bool) -> void:
 		btn.pressed.connect(func(): _confirm_slot(idx))
 		hbox.add_child(btn)
 
-	# Cancel goes back to core picker if we came from there, else closes
 	var cancel_label := "← BACK" if _from_multi_step else "CANCEL"
 	var cancel := _make_cancel_btn(cancel_label)
 	if _from_multi_step:
@@ -145,7 +143,6 @@ func _show_slot_step(core_type: int, from_multi: bool) -> void:
 # ---------------------------------------------------------------------------
 func _confirm_slot(slot_index: int) -> void:
 	_player.equip_core_to_slot(_selected_core_type, slot_index)
-	# Free every core in the room (one-per-room rule)
 	for pickup in get_tree().get_nodes_in_group("core_pickup"):
 		pickup.queue_free()
 	queue_free()
@@ -157,7 +154,7 @@ func _confirm_slot(slot_index: int) -> void:
 func _clear_content() -> void:
 	for child in _content.get_children():
 		_content.remove_child(child)
-		child.queue_free()  # deferred — never free a node mid-signal dispatch
+		child.queue_free()
 
 
 func _add_title(text: String, color: Color) -> void:
@@ -173,22 +170,34 @@ func _add_subtitle(text: String) -> void:
 	var lbl := Label.new()
 	lbl.text = text
 	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	lbl.add_theme_font_size_override("font_size", 14)
-	lbl.add_theme_color_override("font_color", Color(0.60, 0.60, 0.60))
+	lbl.add_theme_font_size_override("font_size", 13)
+	lbl.add_theme_color_override("font_color", Color(0.55, 0.55, 0.55))
 	_content.add_child(lbl)
 
 
+func _make_star_control(size: float, color: Color) -> Control:
+	var lbl := Label.new()
+	lbl.text = "★"
+	lbl.add_theme_font_size_override("font_size", int(size * 1.1))
+	lbl.add_theme_color_override("font_color", color)
+	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl.vertical_alignment   = VERTICAL_ALIGNMENT_CENTER
+	lbl.custom_minimum_size  = Vector2(size, size)
+	lbl.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	return lbl
+
+
+# ---------------------------------------------------------------------------
+# Step 1 button — shows one available core to pick up
+# ---------------------------------------------------------------------------
 func _make_core_btn(core_type: int) -> Button:
 	var color: Color = CORE_COLORS[core_type] if CORE_COLORS.has(core_type) else Color.WHITE
 	var name_text: String = CORE_NAMES[core_type] if CORE_NAMES.has(core_type) else "?"
 
 	var btn := Button.new()
-	btn.custom_minimum_size = Vector2(120, 80)
-	btn.text = "●\n%s" % name_text
-	btn.add_theme_font_size_override("font_size", 15)
-	btn.add_theme_color_override("font_color",        color)
-	btn.add_theme_color_override("font_hover_color",  Color.WHITE)
-	btn.add_theme_color_override("font_pressed_color", Color.WHITE)
+	btn.custom_minimum_size = Vector2(120, 90)
+	btn.text = ""
 
 	var normal := StyleBoxFlat.new()
 	normal.bg_color = Color(color.r * 0.12, color.g * 0.12, color.b * 0.12, 1.0)
@@ -206,38 +215,108 @@ func _make_core_btn(core_type: int) -> Button:
 	btn.add_theme_stylebox_override("pressed", hover)
 	btn.add_theme_stylebox_override("focus",   StyleBoxEmpty.new())
 
+	var vbox := VBoxContainer.new()
+	vbox.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	vbox.add_theme_constant_override("separation", 4)
+	vbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	btn.add_child(vbox)
+
+	var star := _make_star_control(32.0, color)
+	vbox.add_child(star)
+
+	var lbl := Label.new()
+	lbl.text = name_text
+	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	lbl.add_theme_font_size_override("font_size", 13)
+	lbl.add_theme_color_override("font_color", color)
+	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	vbox.add_child(lbl)
+
 	return btn
 
 
+# ---------------------------------------------------------------------------
+# Step 2 button — shows one equipment slot with current vs incoming core
+# ---------------------------------------------------------------------------
 func _make_slot_btn(slot_index: int, current_type: int, incoming_type: int) -> Button:
 	var inc_color: Color = CORE_COLORS[incoming_type] if CORE_COLORS.has(incoming_type) else Color.WHITE
-	var cur_name: String = CORE_NAMES[current_type] if CORE_NAMES.has(current_type) else "Empty"
-	var inc_name: String = CORE_NAMES[incoming_type] if CORE_NAMES.has(incoming_type) else "?"
+	var cur_color: Color = CORE_COLORS[current_type]  if CORE_COLORS.has(current_type)  else CORE_COLORS[0]
+	var cur_name: String = CORE_NAMES[current_type]   if CORE_NAMES.has(current_type)   else "Empty"
 
 	var btn := Button.new()
-	btn.custom_minimum_size = Vector2(158, 100)
-	btn.text = "SLOT %d\n%s\n→  %s" % [slot_index + 1, cur_name, inc_name]
-	btn.add_theme_font_size_override("font_size", 14)
-	btn.add_theme_color_override("font_color",        Color(0.85, 0.85, 0.85))
-	btn.add_theme_color_override("font_hover_color",  Color.WHITE)
-	btn.add_theme_color_override("font_pressed_color", Color.WHITE)
+	btn.custom_minimum_size = Vector2(150, 130)
+	btn.text = ""
 
 	var normal := StyleBoxFlat.new()
-	normal.bg_color     = Color(0.10, 0.10, 0.16, 1.0)
+	normal.bg_color     = Color(inc_color.r * 0.08, inc_color.g * 0.08, inc_color.b * 0.08, 1.0)
 	normal.border_color = inc_color
 	normal.set_border_width_all(2)
 	normal.set_corner_radius_all(6)
 	btn.add_theme_stylebox_override("normal", normal)
 
 	var hover := StyleBoxFlat.new()
-	hover.bg_color = Color(
-		inc_color.r * 0.22, inc_color.g * 0.22, inc_color.b * 0.22, 1.0)
+	hover.bg_color = Color(inc_color.r * 0.24, inc_color.g * 0.24, inc_color.b * 0.24, 1.0)
 	hover.border_color = inc_color
 	hover.set_border_width_all(2)
 	hover.set_corner_radius_all(6)
 	btn.add_theme_stylebox_override("hover",   hover)
 	btn.add_theme_stylebox_override("pressed", hover)
 	btn.add_theme_stylebox_override("focus",   StyleBoxEmpty.new())
+
+	var vbox := VBoxContainer.new()
+	vbox.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	vbox.add_theme_constant_override("separation", 3)
+	vbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	btn.add_child(vbox)
+
+	# Slot number
+	var slot_lbl := Label.new()
+	slot_lbl.text = "SLOT  %d" % (slot_index + 1)
+	slot_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	slot_lbl.add_theme_font_size_override("font_size", 11)
+	slot_lbl.add_theme_color_override("font_color", Color(0.50, 0.50, 0.50))
+	slot_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	vbox.add_child(slot_lbl)
+
+	# ── Currently equipped (muted, top section) ──────────────────────────────
+	var cur_row := HBoxContainer.new()
+	cur_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	cur_row.add_theme_constant_override("separation", 5)
+	cur_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	vbox.add_child(cur_row)
+
+	var cur_star := _make_star_control(16.0, Color(cur_color.r * 0.55, cur_color.g * 0.55, cur_color.b * 0.55))
+	cur_row.add_child(cur_star)
+
+	var cur_lbl := Label.new()
+	cur_lbl.text = cur_name
+	cur_lbl.add_theme_font_size_override("font_size", 12)
+	cur_lbl.add_theme_color_override("font_color", Color(cur_color.r * 0.55, cur_color.g * 0.55, cur_color.b * 0.55))
+	cur_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	cur_row.add_child(cur_lbl)
+
+	# Arrow
+	var arrow := Label.new()
+	arrow.text = "v"
+	arrow.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	arrow.add_theme_font_size_override("font_size", 11)
+	arrow.add_theme_color_override("font_color", Color(0.40, 0.40, 0.40))
+	arrow.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	vbox.add_child(arrow)
+
+	# ── Incoming core (bright, prominent) ────────────────────────────────────
+	var inc_star := _make_star_control(36.0, inc_color)
+	vbox.add_child(inc_star)
+
+	var inc_lbl := Label.new()
+	inc_lbl.text = CORE_NAMES[incoming_type] if CORE_NAMES.has(incoming_type) else "?"
+	inc_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	inc_lbl.add_theme_font_size_override("font_size", 14)
+	inc_lbl.add_theme_color_override("font_color", inc_color)
+	inc_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	vbox.add_child(inc_lbl)
 
 	return btn
 

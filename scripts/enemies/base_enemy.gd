@@ -20,6 +20,10 @@ const STUN_FLASH_PERIOD := 0.12
 var teleport_when_stuck := false
 var teleport_target := Vector2.ZERO       # Set by spawner; falls back to viewport center if zero
 var teleport_zones: Array[Rect2] = []     # If set, only teleport when inside one of these rects
+
+# Override for rooms larger than the viewport (e.g. ambush room 1920x1080).
+# When non-empty, _enforce_bounds uses this rect instead of get_viewport_rect().
+var room_bounds := Rect2()
 var _prev_position := Vector2.ZERO
 var _stuck_timer := 0.0
 
@@ -126,6 +130,7 @@ func nuke() -> void:
 
 func _on_death() -> void:
 	_is_dying = true
+	Tracker.record_kill(get_script().resource_path)
 	if drop_core_type != 0:
 		_spawn_core_pickup()
 	# Power-up drop — basic enemies only, never bosses
@@ -188,11 +193,11 @@ func _in_teleport_zone() -> bool:
 	return false
 
 func _enforce_bounds() -> void:
-	var vp := get_viewport_rect()
 	const MARGIN := 80.0
-	if global_position.x < -MARGIN or global_position.x > vp.size.x + MARGIN \
-			or global_position.y < -MARGIN or global_position.y > vp.size.y + MARGIN:
-		global_position = vp.size / 2.0
+	var bounds_size: Vector2 = room_bounds.size if room_bounds.size != Vector2.ZERO else get_viewport_rect().size
+	if global_position.x < -MARGIN or global_position.x > bounds_size.x + MARGIN \
+			or global_position.y < -MARGIN or global_position.y > bounds_size.y + MARGIN:
+		global_position = bounds_size / 2.0
 		velocity = Vector2.ZERO
 
 func _dir_to_player() -> Vector2:

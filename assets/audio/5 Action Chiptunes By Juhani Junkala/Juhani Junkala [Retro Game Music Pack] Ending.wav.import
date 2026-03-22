@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://b4huxelegbcc"
+path="res://.godot/imported/Juhani Junkala [Retro Game Music Pack] Ending.wav-fc552f54fa248b00ce40faf2af6e8813.sample"
+
+[deps]
+
+source_file="res://assets/audio/5 Action Chiptunes By Juhani Junkala/Juhani Junkala [Retro Game Music Pack] Ending.wav"
+dest_files=["res://.godot/imported/Juhani Junkala [Retro Game Music Pack] Ending.wav-fc552f54fa248b00ce40faf2af6e8813.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=0

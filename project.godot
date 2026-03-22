@@ -17,12 +17,18 @@ config/run/main_scene="res://scenes/ui/HomeScreen.tscn"
 
 [autoload]
 
+PlayerAuth="*res://scripts/autoload/player_auth.gd"
 GameState="*res://scripts/autoload/game_state.gd"
 MusicManager="*res://scripts/autoload/music_manager.gd"
+Tracker="*res://scripts/autoload/tracker.gd"
 
 [display]
 
-window/size/mode=3
+window/size/viewport_width=1280
+window/size/viewport_height=720
+window/size/mode=0
+window/stretch/mode="canvas_items"
+window/stretch/aspect="keep"
 
 [rendering]
 

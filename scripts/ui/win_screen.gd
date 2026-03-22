@@ -13,6 +13,7 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	layer = 20
 	get_tree().paused = true
+	Tracker.on_win()
 	_build_ui()
 
 
@@ -104,6 +105,7 @@ func _on_endless_pressed() -> void:
 
 
 func _on_menu_pressed() -> void:
+	Tracker.on_menu_from_win()
 	get_tree().paused = false
 	GameState.player_health      = 100
 	GameState.player_cores       = [0, 0, 0]

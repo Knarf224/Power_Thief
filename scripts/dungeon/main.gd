@@ -11,8 +11,11 @@ const EXIT_THRESHOLD = 60
 const SPAWN_INSET  = 80.0
 # Minimum distance from corners along the perpendicular axis
 const SPAWN_MARGIN = 100.0
-# Seconds to wait before enemies appear (prevents spawn-on-top-of-player)
-const SPAWN_DELAY  = 1.2
+
+# Wave spawn settings (non-boss rooms only)
+const WAVE_GRACE = 1.5   # grace period before first wave
+const WAVE_SIZE  = 6     # max enemies per wave
+const WAVE_PAUSE = 3.0   # seconds between waves
 
 const ENEMY_SCENES = [
 	"res://scenes/enemies/FireMage.tscn",
@@ -33,11 +36,14 @@ var _enemies_spawned := false
 var _walls:   Array  = []
 var _blackout: Node
 
-# Spawn delay
-var _spawn_timer   := 0.0
-var _spawn_pending := false
-var _spawn_count   := 0
-var _spawn_types:  Array = []
+# Spawn state
+var _spawn_timer    := 0.0
+var _spawn_pending  := false
+var _spawn_count    := 0
+var _spawned_so_far := 0
+var _wave_index     := 0
+var _spawn_types: Array = []
+var _boss_level     := false
 
 # Which border sides are eligible for this room entry (excludes the player's side)
 var _eligible_sides: Array = []
@@ -58,6 +64,8 @@ func _ready() -> void:
 	hud.update_cores(player.core_slots)
 	hud.update_stamina(player.stamina, player.MAX_STAMINA)
 	MusicManager.on_room_entered(GameState.room_counter)
+	if GameState.room_counter == 0:
+		Tracker.on_run_started()
 
 	# Position player on the opposite side from where they exited last room
 	match GameState.exit_direction:
@@ -79,7 +87,8 @@ func _ready() -> void:
 	_spawn_types  = types
 	_spawn_pending = true
 
-	if GameState.is_boss_level():
+	_boss_level = GameState.is_boss_level()
+	if _boss_level:
 		_spawn_count = GameState.get_boss_companion_count()
 		_spawn_boss()
 	else:
@@ -91,12 +100,19 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
-	# Countdown to enemy spawn
 	if _spawn_pending:
 		_spawn_timer += delta
-		if _spawn_timer >= SPAWN_DELAY:
-			_spawn_pending = false
-			_do_spawn()
+		if _boss_level:
+			# Boss rooms: spawn all companions at once after grace period
+			if _spawn_timer >= WAVE_GRACE:
+				_spawn_pending = false
+				_do_spawn_all()
+		else:
+			# Normal rooms: wave system — first wave after grace, then every WAVE_PAUSE
+			var threshold := WAVE_GRACE if _wave_index == 0 else WAVE_PAUSE
+			if _spawn_timer >= threshold:
+				_spawn_timer = 0.0
+				_do_spawn_wave()
 
 	match _state:
 		RoomState.FIGHTING:
@@ -148,25 +164,32 @@ func _border_position(side: String) -> Vector2:
 	return Vector2(randf_range(100, ROOM_W - 100), randf_range(100, ROOM_H - 100))
 
 
-func _do_spawn() -> void:
-	# On boss levels, companions use the boss's thematic enemy type
+# Boss rooms: spawn all companions at once (no waves)
+func _do_spawn_all() -> void:
 	var companion_scene := ""
-	if GameState.is_boss_level():
-		var boss_node = get_tree().get_first_node_in_group("boss")
-		if boss_node and "companion_scene" in boss_node:
-			companion_scene = boss_node.companion_scene
-
+	var boss_node = get_tree().get_first_node_in_group("boss")
+	if boss_node and "companion_scene" in boss_node:
+		companion_scene = boss_node.companion_scene
 	for i in _spawn_count:
-		var scene_path: String
-		if companion_scene != "":
-			scene_path = companion_scene
-		else:
-			scene_path = _spawn_types[i % _spawn_types.size()]
+		var scene_path := companion_scene if companion_scene != "" else _spawn_types[i % _spawn_types.size()]
 		var enemy = load(scene_path).instantiate()
 		add_child(enemy)
-		var side: String = _eligible_sides[randi() % _eligible_sides.size()]
-		enemy.global_position = _border_position(side)
+		enemy.global_position = _border_position(_eligible_sides[randi() % _eligible_sides.size()])
 	_enemies_spawned = true
+
+
+# Normal rooms: spawn one wave of up to WAVE_SIZE enemies
+func _do_spawn_wave() -> void:
+	var end := mini(_spawned_so_far + WAVE_SIZE, _spawn_count)
+	for i in range(_spawned_so_far, end):
+		var enemy = load(_spawn_types[i % _spawn_types.size()]).instantiate()
+		add_child(enemy)
+		enemy.global_position = _border_position(_eligible_sides[randi() % _eligible_sides.size()])
+	_spawned_so_far = end
+	_wave_index += 1
+	if _spawned_so_far >= _spawn_count:
+		_spawn_pending = false
+		_enemies_spawned = true
 
 func _spawn_boss() -> void:
 	var boss = load(GameState.get_boss_scene()).instantiate()
@@ -200,6 +223,7 @@ func _load_next_room(direction: String) -> void:
 
 
 func _on_player_died() -> void:
+	Tracker.on_player_died()
 	hud.show_you_died()
 
 

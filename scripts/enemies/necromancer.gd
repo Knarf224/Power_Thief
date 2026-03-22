@@ -12,6 +12,8 @@ const MAX_SUMMONED = 3
 var _shoot_timer := 0.0
 var _summon_timer := 0.0
 
+@onready var _visual: AnimatedSprite2D = $Visual
+
 func _ready() -> void:
 	super()
 	max_health = 35
@@ -27,6 +29,8 @@ func _ai_update(delta: float) -> void:
 		velocity = -dir * MOVE_SPEED
 	else:
 		velocity = Vector2.ZERO
+	if velocity.x != 0.0:
+		_visual.flip_h = velocity.x < 0.0
 	_shoot_timer -= delta
 	if _shoot_timer <= 0.0:
 		_shoot()
