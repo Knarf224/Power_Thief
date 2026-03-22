@@ -182,7 +182,9 @@ Replace remaining placeholder colored shapes with art assets and add idle/attack
 - [x] **Ghost** — sprite from `Ghost_Sheet.png` (128×32, 4×32px frames, 8fps animated walk cycle)
 - [x] **Bomb Beetle** — sprite from `bug_sheet.png` (248×64, 4×62px frames, 8fps) at 0.75× scale; directional rotation snaps to cardinal facing direction
 - [x] **Stone Golem** — sprite from `golem_sheet.png` (192×64, 3×64px frames, 6fps) at 1.125× scale
-- [ ] Replace remaining colored polygon enemies with sprites (Assassin, Slime, Lightning Sprite, Necromancer, Poison Toad)
+- [x] **Necromancer** — sprite from `assets/enemies/necro.png`; 1-frame + horizontal flip on movement
+- [x] **Poison Toad** — sprite from `assets/enemies/frog_blue_spritesheet.png`; animated
+- [ ] Replace remaining colored polygon enemies with sprites (Lightning Sprite)
 - [ ] Replace all boss placeholder shapes with sprites
 - [ ] Add idle animation (looping) for player and all enemies
 - [ ] Add attack/shoot animation frame for ranged enemies
@@ -195,12 +197,59 @@ Background music tracks for rooms and boss encounters.
 - [ ] Wire tracks to room type — boss fight music starts on boss spawn, returns to room music on boss death
 - [ ] Add basic volume control option on Home Screen
 
-### High Score System
-Track how far each run reaches and display a leaderboard.
-- [ ] Store `furthest_room_counter` in a persistent save file (`user://scores.cfg`)
-- [ ] Display personal best on Home Screen ("Best: Level N")
-- [ ] Show final level reached on YOU DIED screen
-- [ ] Optional: local top-5 run history list
+### Online Tracker & Leaderboard System
+Track runs and deaths via Supabase; display on the Milk Chug Studios website.
+- [x] Supabase DB migration written (`docs/db_migration_v1.sql`) — `players`, `runs`, `deaths` tables
+- [x] `PlayerAuth` autoload — anonymous UUID assigned on first launch, stored in `user://player_id.cfg`
+- [x] `Tracker` autoload — submits run start/end and death events to Supabase REST API
+- [x] `LoginScreen` — optional username entry bound to player UUID
+- [x] `AlmanacScreen` — shows personal run history from Supabase
+- [x] `LeaderboardScreen` — shows top runs globally from Supabase
+- [ ] **Website leaderboard page** (`src/pages/games/power-thief/leaderboard.astro`) — Phase 6, incomplete
+- [ ] **End-to-end test on live site** — NOT yet verified: env vars, RLS policies, tracker submission, leaderboard queries
+- [ ] Show final level reached on YOU DIED screen (surface `room_counter` value)
+- [ ] Personal best on Home Screen ("Best: Level N") — use Tracker local cache
+
+---
+
+---
+
+## Deployment Notes (Web Export Pipeline)
+
+**Export path:** `./index.html` (game project root → copy manually to website)
+
+**After every Godot export, perform these steps in order:**
+1. Open `index.html` in the game project root and re-add the SW unregister script inside `<body>`:
+   ```html
+   <script>
+     if ('serviceWorker' in navigator) {
+       navigator.serviceWorker.getRegistrations().then(function(registrations) {
+         for (var r of registrations) { r.unregister(); }
+       });
+     }
+   </script>
+   ```
+2. Copy the correct thumbnail: `cp assets/thumbnail.png ../../../milk-chug-studios-website/public/play/power-thief/index.png`
+   *(Godot overwrites index.png with its own splash — must restore after every export)*
+3. Copy all export files: `cp index.* ../../../milk-chug-studios-website/public/play/power-thief/`
+4. Commit and push the website repo.
+
+**Known fragile points:**
+- `index.html` SW script is deleted on every Godot export — must re-inject every time
+- `index.png` (thumbnail) is overwritten on every Godot export — must restore every time
+- `ensureCrossOriginIsolationHeaders` must stay `false` (already set in export preset — do not change)
+- `script_export_mode=2` (bytecode) — do NOT use inner classes with `_draw()` overrides or `preload()` of custom scripts in UI code; they cause silent .pck failures
+
+---
+
+## Known Outstanding Issues (as of 2026-03-22)
+
+- **Game playability unconfirmed** — camera zoom fix (1.0) deployed but not verified live by user
+- **Core pickup star UI** — deployed with Unicode `★` fix; not confirmed rendering correctly in browser
+- **Thumbnail corrupted** — `index.png` in play/power-thief was overwritten by Godot export; needs restore from `assets/thumbnail.png`
+- **Tracker/Leaderboard not end-to-end tested** — scripts written, not verified on live site
+- **Website leaderboard page** — Phase 6 incomplete
+- See `docs/setbacks.md` for full session retrospective
 
 ---
 
@@ -233,7 +282,7 @@ new-game-project/
 │   ├── fx/           # DeathBurstFx.tscn, GravityPushFx.tscn
 │   └── ui/           # HUD.tscn, HomeScreen.tscn, PerkSelect.tscn, WinScreen.tscn
 ├── scripts/
-│   ├── autoload/     # game_state.gd  ← persists all run state across scene changes
+│   ├── autoload/     # game_state.gd, player_auth.gd, tracker.gd, music_manager.gd  ← all run state + backend
 │   ├── player/       # player.gd, projectile.gd, fire_bomb.gd, dash_explosion.gd, summoned_ally.gd
 │   ├── enemies/      # base_enemy.gd, fire_mage.gd, assassin.gd, slime.gd, ghost.gd,
 │   │                 # bomb_beetle.gd, ice_witch.gd, lightning_sprite.gd, stone_golem.gd,
@@ -246,12 +295,14 @@ new-game-project/
 │   │                 # blackout_overlay.gd
 │   ├── fx/           # death_burst_fx.gd, gravity_push_fx.gd
 │   ├── pickups/      # power_up_pickup.gd
-│   └── ui/           # hud.gd, home_screen.gd, perk_select.gd, win_screen.gd
-├── docs/             # boss.md, buff.md, enemies.md, rooms.md, staging.md, TASK.md
+│   └── ui/           # hud.gd, home_screen.gd, perk_select.gd, win_screen.gd, core_swap_ui.gd
+│                     # login_screen.gd, almanac_screen.gd, leaderboard_screen.gd
+├── docs/             # boss.md, buff.md, enemies.md, rooms.md, staging.md, TASK.md, backendops.md, setbacks.md
 ├── resources/
 │   └── power_cores/  # (placeholder)
 └── assets/
     ├── sprites/      # player_sprite.png
-    ├── enemies/      # fire_mage.png, frost_mage.png, rogue_assassin.png, Ghost_Sheet.png, bug_sheet.png, golem_sheet.png
-    └── audio/        # (placeholder)
+    ├── enemies/      # fire_mage.png, frost_mage.png, rogue_assassin.png, Ghost_Sheet.png, bug_sheet.png,
+    │                 # golem_sheet.png, necro.png, frog_blue_spritesheet.png
+    └── audio/        # 5 Action Chiptunes By Juhani Junkala (title, level 1-3, ending)
 ```
