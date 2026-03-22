@@ -34,7 +34,7 @@ const ENEMY_SCENES = [
 var _state           := RoomState.FIGHTING
 var _enemies_spawned := false
 var _walls:   Array  = []
-var _blackout: Node
+var _blackout: Node  = null
 
 # Spawn state
 var _spawn_timer    := 0.0
@@ -84,7 +84,7 @@ func _ready() -> void:
 	# Prepare delayed spawn
 	var types := ENEMY_SCENES.duplicate()
 	types.shuffle()
-	_spawn_types  = types
+	_spawn_types   = types
 	_spawn_pending = true
 
 	_boss_level = GameState.is_boss_level()
@@ -94,9 +94,9 @@ func _ready() -> void:
 	else:
 		_spawn_count = GameState.get_enemy_count(2)
 
-	var BlackoutClass = load("res://scripts/dungeon/blackout_overlay.gd")
-	if BlackoutClass:
-		_blackout = BlackoutClass.new()
+	var blackout_class = load("res://scripts/dungeon/blackout_overlay.gd")
+	if blackout_class != null:
+		_blackout = blackout_class.new()
 		add_child(_blackout)
 
 
@@ -118,8 +118,8 @@ func _process(delta: float) -> void:
 	match _state:
 		RoomState.FIGHTING:
 			if _enemies_spawned and get_tree().get_nodes_in_group("enemy").is_empty():
-				if _blackout:
-				_blackout.deactivate()
+				if _blackout != null:
+					_blackout.deactivate()
 				if GameState.boss_defeated_this_level and GameState.is_boss_level():
 					_open_exits()
 					GameState.open_pending_perk_select()
@@ -146,14 +146,13 @@ func _process(delta: float) -> void:
 
 
 # Returns which side of the new room the player enters from
-# (opposite of the direction they exited the previous room)
 func _entry_side(exit_dir: String) -> String:
 	match exit_dir:
-		"west":  return "east"   # exited west → enters from east side
+		"west":  return "east"
 		"east":  return "west"
 		"north": return "south"
 		"south": return "north"
-	return ""  # default / center start — no side to exclude
+	return ""
 
 
 func _border_position(side: String) -> Vector2:
@@ -162,7 +161,6 @@ func _border_position(side: String) -> Vector2:
 		"south": return Vector2(randf_range(SPAWN_MARGIN, ROOM_W - SPAWN_MARGIN), ROOM_H - SPAWN_INSET)
 		"west":  return Vector2(SPAWN_INSET, randf_range(SPAWN_MARGIN, ROOM_H - SPAWN_MARGIN))
 		"east":  return Vector2(ROOM_W - SPAWN_INSET, randf_range(SPAWN_MARGIN, ROOM_H - SPAWN_MARGIN))
-	# Fallback: random interior position (should never reach here)
 	return Vector2(randf_range(100, ROOM_W - 100), randf_range(100, ROOM_H - 100))
 
 
@@ -173,7 +171,11 @@ func _do_spawn_all() -> void:
 	if boss_node and "companion_scene" in boss_node:
 		companion_scene = boss_node.companion_scene
 	for i in _spawn_count:
-		var scene_path := companion_scene if companion_scene != "" else _spawn_types[i % _spawn_types.size()]
+		var scene_path: String
+		if companion_scene != "":
+			scene_path = companion_scene
+		else:
+			scene_path = _spawn_types[i % _spawn_types.size()]
 		var enemy = load(scene_path).instantiate()
 		add_child(enemy)
 		enemy.global_position = _border_position(_eligible_sides[randi() % _eligible_sides.size()])
@@ -193,10 +195,10 @@ func _do_spawn_wave() -> void:
 		_spawn_pending = false
 		_enemies_spawned = true
 
+
 func _spawn_boss() -> void:
 	var boss = load(GameState.get_boss_scene()).instantiate()
 	add_child(boss)
-	# Place boss on the far side of the room from the player's entry point
 	match GameState.exit_direction:
 		"west":  boss.global_position = Vector2(120,           ROOM_H / 2.0)
 		"east":  boss.global_position = Vector2(ROOM_W - 120,  ROOM_H / 2.0)
