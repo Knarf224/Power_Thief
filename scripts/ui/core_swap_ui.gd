@@ -176,16 +176,11 @@ func _add_subtitle(text: String) -> void:
 
 
 func _make_star_control(size: float, color: Color) -> Control:
-	var lbl := Label.new()
-	lbl.text = "★"
-	lbl.add_theme_font_size_override("font_size", int(size * 1.1))
-	lbl.add_theme_color_override("font_color", color)
-	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	lbl.vertical_alignment   = VERTICAL_ALIGNMENT_CENTER
-	lbl.custom_minimum_size  = Vector2(size, size)
-	lbl.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	return lbl
+	var StarClass = load("res://scripts/ui/star_shape.gd")
+	var star = StarClass.new()
+	star.star_color = color
+	star.star_size  = size
+	return star
 
 
 # ---------------------------------------------------------------------------
@@ -280,15 +275,23 @@ func _make_slot_btn(slot_index: int, current_type: int, incoming_type: int) -> B
 	slot_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	vbox.add_child(slot_lbl)
 
-	# ── Currently equipped (muted, top section) ──────────────────────────────
+	# ── Currently equipped (muted) ───────────────────────────────────────────
+	var has_lbl := Label.new()
+	has_lbl.text = "HAS:"
+	has_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	has_lbl.add_theme_font_size_override("font_size", 10)
+	has_lbl.add_theme_color_override("font_color", Color(0.40, 0.40, 0.40))
+	has_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	vbox.add_child(has_lbl)
+
 	var cur_row := HBoxContainer.new()
 	cur_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	cur_row.add_theme_constant_override("separation", 5)
 	cur_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	vbox.add_child(cur_row)
 
-	var cur_star := _make_star_control(16.0, Color(cur_color.r * 0.55, cur_color.g * 0.55, cur_color.b * 0.55))
-	cur_row.add_child(cur_star)
+	var cur_dot := _make_star_control(12.0, Color(cur_color.r * 0.55, cur_color.g * 0.55, cur_color.b * 0.55))
+	cur_row.add_child(cur_dot)
 
 	var cur_lbl := Label.new()
 	cur_lbl.text = cur_name
@@ -297,17 +300,17 @@ func _make_slot_btn(slot_index: int, current_type: int, incoming_type: int) -> B
 	cur_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	cur_row.add_child(cur_lbl)
 
-	# Arrow
-	var arrow := Label.new()
-	arrow.text = "v"
-	arrow.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	arrow.add_theme_font_size_override("font_size", 11)
-	arrow.add_theme_color_override("font_color", Color(0.40, 0.40, 0.40))
-	arrow.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	vbox.add_child(arrow)
+	# Replace label
+	var replace_lbl := Label.new()
+	replace_lbl.text = "REPLACE WITH:"
+	replace_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	replace_lbl.add_theme_font_size_override("font_size", 10)
+	replace_lbl.add_theme_color_override("font_color", Color(0.50, 0.50, 0.50))
+	replace_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	vbox.add_child(replace_lbl)
 
 	# ── Incoming core (bright, prominent) ────────────────────────────────────
-	var inc_star := _make_star_control(36.0, inc_color)
+	var inc_star := _make_star_control(28.0, inc_color)
 	vbox.add_child(inc_star)
 
 	var inc_lbl := Label.new()
