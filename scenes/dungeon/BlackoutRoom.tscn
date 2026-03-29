@@ -1,6 +1,6 @@
 [gd_scene load_steps=4 format=3 uid="uid://cfnflbd8bm027"]
 
-[ext_resource type="Script" path="res://scripts/dungeon/blackout_room.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/dungeon/blackout_overlay.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/player/Player.tscn" id="2"]
 [ext_resource type="PackedScene" path="res://scenes/ui/HUD.tscn" id="3"]
 

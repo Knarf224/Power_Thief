@@ -167,11 +167,11 @@ The game runs inside an `<iframe>` on the Astro website. There are two potential
 **1. COEP service worker (Godot export flag)**
 Every Godot web export sets `"ensureCrossOriginIsolationHeaders": true` in `index.html`. This installs a service worker that adds `Cross-Origin-Embedder-Policy: require-corp` headers, which blocks ALL cross-origin fetches (including to Supabase).
 
-**Fix:** After every export, open `public/games/power-thief/index.html` and change:
+**Fix:** The `deploy.sh` script handles this automatically. If fixing manually, open `public/play/power-thief/index.html` and change:
 ```js
 "ensureCrossOriginIsolationHeaders": false
 ```
-This must be done manually after every re-export. The unregister script in `<body>` also clears any previously installed service worker on next page load.
+The unregister script in `<body>` also clears any previously installed service worker on next page load.
 
 **2. CORS (browser policy)**
 Direct requests from `localhost:4321` (or the production domain) to `supabase.co` are subject to CORS. Supabase allows these requests with the anon key, but COEP blocks them first (see above).
@@ -200,7 +200,7 @@ This proxy only works in `astro dev`. Production deployments need a server-side 
 | `src/lib/supabase.js` | Supabase JS client (used by Astro pages) |
 | `src/pages/games/[slug].astro` | Game embed page + iframe fetch relay |
 | `src/pages/games/power-thief/leaderboard.astro` | Public leaderboard page |
-| `public/games/power-thief/index.html` | Godot web export HTML (must flip COEP flag after each export) |
+| `public/play/power-thief/index.html` | Godot web export HTML (COEP flag flipped by `deploy.sh`) |
 
 ---
 
@@ -222,7 +222,7 @@ This proxy only works in `astro dev`. Production deployments need a server-side 
 ### Local development
 ```bash
 # Run website dev server (includes Vite proxy for Supabase)
-cd D:\Coding_W_Knarf\Coding\milk-chug-studios-website
+cd C:\Users\Francisco\milk-chug-studios-website
 npm run dev
 # → http://localhost:4321/games/power-thief
 ```
@@ -350,6 +350,38 @@ The `handle_new_user` trigger auto-inserts into `profiles`. If this fails:
 
 ---
 
+## Security Headers (vercel.json — website repo)
+
+The following headers must be set in the **website repo's `vercel.json`** to prevent iframe embedding attacks and future XSS damage. Add or merge into the `headers` array:
+
+```json
+{
+  "headers": [
+    {
+      "source": "/games/:path*",
+      "headers": [
+        { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
+      ]
+    },
+    {
+      "source": "/play/:path*",
+      "headers": [
+        { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
+        { "key": "X-Content-Type-Options", "value": "nosniff" }
+      ]
+    }
+  ]
+}
+```
+
+> **Why SAMEORIGIN and not DENY?** The game at `/play/power-thief/index.html` must be embeddable by the parent page at `/games/power-thief` — both are on `www.milkchugstudios.com`, which SAMEORIGIN allows. DENY would break the embed.
+
+> **Why no CSP yet?** A full CSP for a Godot WASM game requires `unsafe-eval` and `wasm-unsafe-eval` in `script-src`, plus blob: and data: URIs. Adding a CSP without careful testing tends to break WASM loading. File a follow-up task to tune this once the WASM loading issue is resolved.
+
+---
+
 ## Rules
 
 1. **Never weaken RLS.** All four tables have RLS enabled. Do not add open `USING (true)` policies to `tracker` or any write operation.
@@ -359,3 +391,4 @@ The `handle_new_user` trigger auto-inserts into `profiles`. If this fails:
 5. **After every Godot web export:** flip `ensureCrossOriginIsolationHeaders` to `false` in `index.html`.
 6. **Vite proxy is dev-only.** Any production Supabase calls from the website must go through a proper server route, or be direct calls with no CORS blocker.
 7. **Test with a fresh session.** Before reporting a backend bug, delete `session.cfg` and log in fresh to rule out expired token issues.
+8. **postMessage target origin is locked.** `player_auth.gd` sends postMessages to `'https://www.milkchugstudios.com'` specifically — never change this back to `'*'`, as `'*'` would expose user auth tokens to any site that embeds the game iframe.
